@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { Home, BookOpen, MessageSquare, Bell, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
 
 const TAB_CONFIG = [
   { name: 'index', label: 'Home', icon: Home },
@@ -12,6 +20,51 @@ const TAB_CONFIG = [
   { name: 'profile', label: 'Profile', icon: User },
 ];
 
+const SPRING_CONFIG = { damping: 15, stiffness: 200, mass: 0.5 };
+
+function AnimatedTabItem({ tab, focused, onPress }: any) {
+  const scale = useSharedValue(1);
+  const IconComponent = tab.icon;
+
+  const animatedIconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const animatedPillStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(focused ? 1 : 0, { duration: 200 }),
+    transform: [{ scaleX: withSpring(focused ? 1 : 0.5, SPRING_CONFIG) }],
+  }));
+
+  const handlePressIn = useCallback(() => {
+    scale.value = withSpring(0.85, SPRING_CONFIG);
+  }, []);
+
+  const handlePressOut = useCallback(() => {
+    scale.value = withSpring(1, SPRING_CONFIG);
+  }, []);
+
+  return (
+    <Pressable
+      style={styles.tabItem}
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
+      <Animated.View style={[styles.iconWrapper, animatedIconStyle]}>
+        <Animated.View style={[styles.iconPill, animatedPillStyle]} />
+        <IconComponent
+          color={focused ? '#0B3B60' : '#94A3B8'}
+          size={22}
+          strokeWidth={focused ? 2.5 : 1.8}
+        />
+      </Animated.View>
+      <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
+        {tab.label}
+      </Text>
+    </Pressable>
+  );
+}
+
 function CustomTabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
 
@@ -20,13 +73,11 @@ function CustomTabBar({ state, navigation }: any) {
       <View style={styles.tabBarInner}>
         {TAB_CONFIG.map((tab, index) => {
           const focused = state.index === index;
-          const IconComponent = tab.icon;
-
           return (
-            <TouchableOpacity
+            <AnimatedTabItem
               key={tab.name}
-              style={styles.tabItem}
-              activeOpacity={0.7}
+              tab={tab}
+              focused={focused}
               onPress={() => {
                 const event = navigation.emit({
                   type: 'tabPress',
@@ -37,18 +88,7 @@ function CustomTabBar({ state, navigation }: any) {
                   navigation.navigate(state.routes[index].name);
                 }
               }}
-            >
-              <View style={[styles.iconWrapper, focused && styles.iconWrapperFocused]}>
-                <IconComponent
-                  color={focused ? '#0B3B60' : '#94A3B8'}
-                  size={22}
-                  strokeWidth={focused ? 2.5 : 1.8}
-                />
-              </View>
-              <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
+            />
           );
         })}
       </View>
@@ -60,7 +100,10 @@ export default function TabLayout() {
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+        lazy: true,
+      }}
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="academics" />
@@ -115,9 +158,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 16,
     marginBottom: 3,
+    position: 'relative',
   },
-  iconWrapperFocused: {
+  iconPill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: '#E0F2FE',
+    borderRadius: 16,
   },
   tabLabel: {
     fontSize: 11,

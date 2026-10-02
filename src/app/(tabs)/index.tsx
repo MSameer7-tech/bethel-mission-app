@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Calendar, CheckCircle, BookOpen, CreditCard, ChevronRight, Bell, FileText } from 'lucide-react-native';
@@ -6,10 +6,28 @@ import { studentProfile, attendanceSummary } from '@/data/students';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from 'react-native-reanimated';
+
+const ENTRANCE_DURATION = 400;
+const STAGGER = 80;
 
 export default function StudentDashboard() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  // Entrance animation
+  const entrance = useSharedValue(0);
+  useEffect(() => {
+    entrance.value = withTiming(1, { duration: ENTRANCE_DURATION, easing: Easing.out(Easing.cubic) });
+  }, []);
+
+  const makeEntranceStyle = (index: number) =>
+    useAnimatedStyle(() => ({
+      opacity: withDelay(index * STAGGER, withTiming(entrance.value, { duration: ENTRANCE_DURATION })),
+      transform: [
+        { translateY: withDelay(index * STAGGER, withTiming((1 - entrance.value) * 16, { duration: ENTRANCE_DURATION })) },
+      ],
+    }));
 
   const radius = 32;
   const strokeWidth = 8;
@@ -23,6 +41,7 @@ export default function StudentDashboard() {
       showsVerticalScrollIndicator={false}
     >
       {/* HEADER HERO */}
+      <Animated.View style={makeEntranceStyle(0)}>
       <LinearGradient 
         colors={['#0B3B60', '#0D9488']} 
         start={{ x: 0, y: 0 }} 
@@ -50,8 +69,10 @@ export default function StudentDashboard() {
           </TouchableOpacity>
         </View>
       </LinearGradient>
+      </Animated.View>
 
       {/* COMPACT INFO ROW: ATTENDANCE + UP NEXT */}
+      <Animated.View style={makeEntranceStyle(1)}>
       <View style={styles.infoRow}>
         <TouchableOpacity 
           style={styles.attendanceHalf} 
@@ -94,8 +115,10 @@ export default function StudentDashboard() {
           <Text style={styles.upNextTime}>Tomorrow, 10:00 AM</Text>
         </TouchableOpacity>
       </View>
+      </Animated.View>
 
       {/* FEE REMINDER */}
+      <Animated.View style={makeEntranceStyle(2)}>
       <TouchableOpacity 
         style={styles.feeCard}
         activeOpacity={0.8}
@@ -110,8 +133,10 @@ export default function StudentDashboard() {
           <Text style={styles.feePayBtnText}>Pay →</Text>
         </View>
       </TouchableOpacity>
+      </Animated.View>
 
       {/* QUICK ACCESS */}
+      <Animated.View style={makeEntranceStyle(3)}>
       <Text style={styles.sectionTitle}>QUICK ACCESS</Text>
       <View style={styles.quickAccessGrid}>
         <QuickAccessTile icon={CheckCircle} color="#0EA5E9" bg="#E0F2FE" label="Attendance" route="/(student)/attendance" router={router} />
@@ -121,14 +146,17 @@ export default function StudentDashboard() {
         <QuickAccessTile icon={Calendar} color="#F59E0B" bg="#FEF3C7" label="Calendar" route="/(student)/calendar" router={router} />
         <QuickAccessTile icon={BookOpen} color="#0D9488" bg="#CCFBF1" label="Materials" route="/(student)/study-material" router={router} />
       </View>
+      </Animated.View>
 
       {/* RECENT ACTIVITY */}
+      <Animated.View style={makeEntranceStyle(4)}>
       <Text style={styles.sectionTitle}>RECENT ACTIVITY</Text>
       <View style={styles.activityContainer}>
         <ActivityItem title="Science homework uploaded" time="2 hours ago" color="#8B5CF6" />
         <ActivityItem title="PTM scheduled" time="5 hours ago" color="#0EA5E9" />
         <ActivityItem title="Maths material added" time="Yesterday" color="#10B981" isLast />
       </View>
+      </Animated.View>
     </ScrollView>
   );
 }

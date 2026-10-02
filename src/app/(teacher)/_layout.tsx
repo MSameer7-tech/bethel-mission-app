@@ -7,6 +7,10 @@ export default function TeacherLayout() {
       headerStyle: { backgroundColor: '#0B3B60' },
       headerTintColor: '#FFFFFF',
       headerTitleStyle: { fontWeight: 'bold' as const },
+      animation: 'slide_from_right',
+      animationDuration: 250,
+      gestureEnabled: true,
+      gestureDirection: 'horizontal',
     }}>
       <Stack.Screen name="class-details" options={{ title: 'Class Details' }} />
       <Stack.Screen name="mark-attendance" options={{ title: 'Mark Attendance' }} />

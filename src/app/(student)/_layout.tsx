@@ -3,11 +3,17 @@ import { Stack } from 'expo-router';
 
 export default function StudentLayout() {
   return (
-    <Stack screenOptions={{
-      headerStyle: { backgroundColor: '#0B3B60' },
-      headerTintColor: '#FFFFFF',
-      headerTitleStyle: { fontWeight: 'bold' as const },
-    }}>
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: '#0B3B60' },
+        headerTintColor: '#FFFFFF',
+        headerTitleStyle: { fontWeight: 'bold' as const },
+        animation: 'slide_from_right',
+        animationDuration: 250,
+        gestureEnabled: true,
+        gestureDirection: 'horizontal',
+      }}
+    >
       <Stack.Screen name="attendance" options={{ title: 'Attendance' }} />
       <Stack.Screen name="homework" options={{ title: 'Homework' }} />
       <Stack.Screen name="fees" options={{ title: 'Fees' }} />
