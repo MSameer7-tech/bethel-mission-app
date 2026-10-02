@@ -4,6 +4,7 @@ export const studentProfile = {
   admissionNumber: "BMS/2022/4102",
   class: "VII",
   section: "C",
+  academicYear: "2026-27",
   rollNumber: "24",
   fatherName: "Rajesh Sahu",
   motherName: "Sunita Sahu",
@@ -12,6 +13,7 @@ export const studentProfile = {
   address: "14, Station Road, Anuppur, MP",
   bloodGroup: "O+",
   house: "Red House",
+  transportInfo: "Bus BMS-04",
   transport: {
     busNumber: "BMS-04",
     route: "Anuppur → Bethel Mission School",
@@ -20,4 +22,10 @@ export const studentProfile = {
     driverName: "Ramesh Singh",
     driverContact: "+91 87654 32109"
   }
+};
+
+export const attendanceSummary = {
+  percentage: 92,
+  present: 21,
+  absent: 2
 };
