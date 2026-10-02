@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Home, BookOpen, MessageSquare, Bell, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 const TAB_CONFIG = [
   { name: 'index', label: 'Home', icon: Home },
@@ -17,41 +18,47 @@ function CustomTabBar({ state, navigation }: any) {
 
   return (
     <View style={[styles.tabBarOuter, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={styles.tabBarInner}>
-        {TAB_CONFIG.map((tab, index) => {
-          const focused = state.index === index;
-          const IconComponent = tab.icon;
+      <BlurView
+        intensity={80}
+        tint="light"
+        style={styles.tabBarBlur}
+      >
+        <View style={styles.tabBarInner}>
+          {TAB_CONFIG.map((tab, index) => {
+            const focused = state.index === index;
+            const IconComponent = tab.icon;
 
-          return (
-            <TouchableOpacity
-              key={tab.name}
-              style={styles.tabItem}
-              activeOpacity={0.7}
-              onPress={() => {
-                const event = navigation.emit({
-                  type: 'tabPress',
-                  target: state.routes[index].key,
-                  canPreventDefault: true,
-                });
-                if (!event.defaultPrevented) {
-                  navigation.navigate(state.routes[index].name);
-                }
-              }}
-            >
-              <View style={[styles.iconWrapper, focused && styles.iconWrapperFocused]}>
-                <IconComponent
-                  color={focused ? '#0B3B60' : '#94A3B8'}
-                  size={22}
-                  strokeWidth={focused ? 2.5 : 1.8}
-                />
-              </View>
-              <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+            return (
+              <TouchableOpacity
+                key={tab.name}
+                style={styles.tabItem}
+                activeOpacity={0.7}
+                onPress={() => {
+                  const event = navigation.emit({
+                    type: 'tabPress',
+                    target: state.routes[index].key,
+                    canPreventDefault: true,
+                  });
+                  if (!event.defaultPrevented) {
+                    navigation.navigate(state.routes[index].name);
+                  }
+                }}
+              >
+                <View style={[styles.iconWrapper, focused && styles.iconWrapperFocused]}>
+                  <IconComponent
+                    color={focused ? '#0B3B60' : '#94A3B8'}
+                    size={22}
+                    strokeWidth={focused ? 2.5 : 1.8}
+                  />
+                </View>
+                <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </BlurView>
     </View>
   );
 }
@@ -80,16 +87,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: 'transparent',
   },
-  tabBarInner: {
-    flexDirection: 'row',
-    height: 68,
-    backgroundColor: '#FFFFFF',
+  tabBarBlur: {
     borderRadius: 22,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: 4,
+    borderColor: 'rgba(255,255,255,0.6)',
     ...Platform.select({
       ios: {
         shadowColor: '#0F172A',
@@ -101,6 +103,14 @@ const styles = StyleSheet.create({
         elevation: 8,
       },
     }),
+  },
+  tabBarInner: {
+    flexDirection: 'row',
+    height: 68,
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingHorizontal: 4,
+    backgroundColor: 'rgba(255,255,255,0.7)',
   },
   tabItem: {
     flex: 1,
@@ -117,7 +127,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   iconWrapperFocused: {
-    backgroundColor: '#E0F2FE',
+    backgroundColor: 'rgba(224,242,254,0.8)',
   },
   tabLabel: {
     fontSize: 11,

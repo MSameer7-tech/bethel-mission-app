@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { BookOpen, CheckCircle, CreditCard, Calendar, FileClock, Bell } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 const todayNotifications = [
   { id: 1, type: 'homework', title: 'New Homework', desc: 'Mathematics: Quadratic Equations', time: '10:00 AM', unread: true },
@@ -16,6 +17,7 @@ const earlierNotifications = [
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
+  const headerHeight = Math.max(insets.top + 8, 16) + 56;
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -41,12 +43,8 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top + 8, 16) }]}>
-        <Text style={styles.title}>Notifications</Text>
-      </View>
-
       <ScrollView 
-        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 90 }]}
+        contentContainerStyle={[styles.content, { paddingTop: headerHeight + 12, paddingBottom: Math.max(insets.bottom, 16) + 90 }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.sectionTitle}>TODAY</Text>
@@ -75,6 +73,13 @@ export default function NotificationsScreen() {
           ))}
         </View>
       </ScrollView>
+
+      {/* Frosted glass header */}
+      <BlurView intensity={90} tint="light" style={[styles.headerBlur, { paddingTop: Math.max(insets.top + 8, 16) }]}>
+        <View style={styles.headerInner}>
+          <Text style={styles.title}>Notifications</Text>
+        </View>
+      </BlurView>
     </View>
   );
 }
@@ -98,7 +103,16 @@ const NotificationRow = ({ notif, icon, bg, isLast }: any) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F4F7FA' },
-  header: { paddingHorizontal: 20, paddingBottom: 20, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  headerBlur: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(244,247,250,0.72)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(241,245,249,0.8)',
+  },
+  headerInner: { paddingHorizontal: 20, paddingBottom: 16 },
   title: { fontSize: 28, fontWeight: '800', color: '#0F172A' },
   content: { padding: 20 },
   sectionTitle: { fontSize: 13, fontWeight: '800', color: '#94A3B8', letterSpacing: 1, marginBottom: 10, marginLeft: 4 },
