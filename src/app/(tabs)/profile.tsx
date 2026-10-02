@@ -4,19 +4,24 @@ import { LogOut, Settings } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { studentProfile } from '@/data/students';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const headerHeight = Math.max(insets.top + 8, 16) + 56;
 
   const handleLogout = () => router.replace('/');
 
   return (
     <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top + 8, 16) }]}>
+        <Text style={styles.title}>Profile</Text>
+        <TouchableOpacity style={styles.settingsBtn}>
+          <Settings color="#0F172A" size={24} />
+        </TouchableOpacity>
+      </View>
+      
       <ScrollView 
-        contentContainerStyle={[styles.content, { paddingTop: headerHeight + 12, paddingBottom: Math.max(insets.bottom, 16) + 90 }]}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 90 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heroContainer}>
@@ -61,16 +66,6 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Frosted glass header */}
-      <BlurView intensity={90} tint="light" style={[styles.headerBlur, { paddingTop: Math.max(insets.top + 8, 16) }]}>
-        <View style={styles.headerInner}>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity style={styles.settingsBtn}>
-            <Settings color="#0F172A" size={24} />
-          </TouchableOpacity>
-        </View>
-      </BlurView>
     </View>
   );
 }
@@ -84,18 +79,9 @@ const InfoRow = ({ label, value, isLast }: any) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F4F7FA' },
-  headerBlur: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(244,247,250,0.72)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(241,245,249,0.8)',
-  },
-  headerInner: { paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  headerTitle: { fontSize: 28, fontWeight: '800', color: '#0F172A' },
-  settingsBtn: { padding: 10, backgroundColor: 'rgba(241,245,249,0.8)', borderRadius: 10 },
+  header: { paddingHorizontal: 20, paddingBottom: 20, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  title: { fontSize: 28, fontWeight: '800', color: '#0F172A' },
+  settingsBtn: { padding: 10, backgroundColor: '#F1F5F9', borderRadius: 10 },
   content: { padding: 20 },
   heroContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 28, padding: 20, backgroundColor: '#FFFFFF', borderRadius: 20, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 },
   avatarWrapper: { position: 'relative', marginRight: 20 },
