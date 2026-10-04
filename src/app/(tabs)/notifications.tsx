@@ -1,43 +1,79 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, SectionList } from 'react-native';
 import { BookOpen, CheckCircle, CreditCard, Calendar, FileClock, Bell } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../theme/ThemeContext';
+import { TouchableBounce } from '../../components/TouchableBounce';
 
+// Static Data
 const todayNotifications = [
-  { id: 1, type: 'homework', title: 'New Homework', desc: 'Mathematics: Quadratic Equations', time: '10:00 AM', unread: true },
-  { id: 2, type: 'attendance', title: 'Attendance Updated', desc: 'Marked Present for today', time: '08:15 AM', unread: true },
+  { id: 1, type: 'homework', title: 'New Homework assigned', desc: 'Mathematics: Quadratic Equations', time: '10:00 AM', unread: true },
+  { id: 2, type: 'attendance', title: 'Attendance Updated', desc: 'You were marked Present for today', time: '08:15 AM', unread: true },
 ];
 
 const earlierNotifications = [
-  { id: 3, type: 'fee', title: 'Fee Reminder', desc: '₹2,500 due for Quarter 3', time: 'Yesterday', unread: false },
+  { id: 3, type: 'fee', title: 'Fee Reminder', desc: '₹2,500 due for Quarter 3. Please pay by 10 Oct.', time: 'Yesterday', unread: false },
   { id: 4, type: 'exam', title: 'Exam Timetable', desc: 'Half Yearly schedule published', time: '12 Oct', unread: false },
   { id: 5, type: 'leave', title: 'Leave Approved', desc: 'Your leave for 10 Oct is approved', time: '10 Oct', unread: false },
 ];
 
+// Memoized Icon Fetchers
+const getIcon = (type: string, theme: any) => {
+  switch (type) {
+    case 'homework': return <BookOpen color={theme.colors.academic} size={20} />;
+    case 'attendance': return <CheckCircle color={theme.colors.success} size={20} />;
+    case 'fee': return <CreditCard color={theme.colors.error} size={20} />;
+    case 'exam': return <Calendar color={theme.colors.info} size={20} />;
+    case 'leave': return <FileClock color={theme.colors.secondary} size={20} />;
+    default: return <Bell color={theme.colors.textSecondary} size={20} />;
+  }
+};
+
+const getIconBg = (type: string, theme: any) => {
+  switch (type) {
+    case 'homework': return theme.colors.academicBg;
+    case 'attendance': return theme.colors.successBg;
+    case 'fee': return theme.colors.errorBg;
+    case 'exam': return theme.colors.infoBg;
+    case 'leave': return theme.colors.successBg;
+    default: return theme.colors.borderLight;
+  }
+};
+
+// Memoized Row
+const NotificationRow = React.memo(({ notif, isLast, theme, styles }: any) => {
+  const icon = getIcon(notif.type, theme);
+  const bg = getIconBg(notif.type, theme);
+
+  return (
+    <TouchableBounce 
+      bounceScale={0.98}
+      style={[styles.row, notif.unread && { backgroundColor: theme.colors.infoBg }]} 
+    >
+      <View style={[styles.iconWrapper, { backgroundColor: bg }]}>
+        {icon}
+      </View>
+      <View style={[styles.textContent, isLast && styles.textContentLast, notif.unread && { borderBottomColor: 'transparent' }]}>
+        <View style={styles.titleRow}>
+          <Text style={[styles.notifTitle, notif.unread && styles.textBold]} numberOfLines={1}>{notif.title}</Text>
+          <Text style={styles.notifTime}>{notif.time}</Text>
+        </View>
+        <Text style={styles.notifDesc} numberOfLines={2}>{notif.desc}</Text>
+      </View>
+      {notif.unread && <View style={styles.unreadIndicator} />}
+    </TouchableBounce>
+  );
+});
+
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'homework': return <BookOpen color="#8B5CF6" size={22} />;
-      case 'attendance': return <CheckCircle color="#10B981" size={22} />;
-      case 'fee': return <CreditCard color="#F43F5E" size={22} />;
-      case 'exam': return <Calendar color="#0EA5E9" size={22} />;
-      case 'leave': return <FileClock color="#0D9488" size={22} />;
-      default: return <Bell color="#64748B" size={22} />;
-    }
-  };
-
-  const getIconBg = (type: string) => {
-    switch (type) {
-      case 'homework': return '#EDE9FE';
-      case 'attendance': return '#D1FAE5';
-      case 'fee': return '#FFE4E6';
-      case 'exam': return '#E0F2FE';
-      case 'leave': return '#CCFBF1';
-      default: return '#F1F5F9';
-    }
-  };
+  const sections = useMemo(() => [
+    { title: 'TODAY', data: todayNotifications },
+    { title: 'EARLIER', data: earlierNotifications }
+  ], []);
 
   return (
     <View style={styles.container}>
@@ -45,72 +81,52 @@ export default function NotificationsScreen() {
         <Text style={styles.title}>Notifications</Text>
       </View>
 
-      <ScrollView 
-        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 90 }]}
+      <SectionList 
+        sections={sections}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) }]}
         showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.sectionTitle}>TODAY</Text>
-        <View style={styles.cardContainer}>
-          {todayNotifications.map((notif, idx) => (
-            <NotificationRow 
-              key={notif.id} 
-              notif={notif} 
-              icon={getIcon(notif.type)} 
-              bg={getIconBg(notif.type)} 
-              isLast={idx === todayNotifications.length - 1} 
-            />
-          ))}
-        </View>
-
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>EARLIER</Text>
-        <View style={styles.cardContainer}>
-          {earlierNotifications.map((notif, idx) => (
-            <NotificationRow 
-              key={notif.id} 
-              notif={notif} 
-              icon={getIcon(notif.type)} 
-              bg={getIconBg(notif.type)} 
-              isLast={idx === earlierNotifications.length - 1} 
-            />
-          ))}
-        </View>
-      </ScrollView>
+        stickySectionHeadersEnabled={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        renderSectionHeader={({ section: { title } }) => (
+          <Text style={[styles.sectionTitle, title === 'EARLIER' && { marginTop: theme.spacing.lg }]}>
+            {title}
+          </Text>
+        )}
+        renderItem={({ item, index, section }) => (
+          <NotificationRow 
+            notif={item} 
+            isLast={index === section.data.length - 1} 
+            theme={theme}
+            styles={styles}
+          />
+        )}
+      />
     </View>
   );
 }
 
-const NotificationRow = ({ notif, icon, bg, isLast }: any) => (
-  <TouchableOpacity 
-    style={[styles.row, isLast && styles.rowLast, notif.unread && styles.rowUnread]} 
-    activeOpacity={0.6}
-  >
-    <View style={[styles.iconWrapper, { backgroundColor: bg }]}>
-      {icon}
-    </View>
-    <View style={styles.textContent}>
-      <Text style={[styles.notifTitle, notif.unread && styles.textBold]} numberOfLines={1}>{notif.title}</Text>
-      <Text style={styles.notifDesc} numberOfLines={1}>{notif.desc}</Text>
-      <Text style={styles.notifTime}>{notif.time}</Text>
-    </View>
-    {notif.unread && <View style={styles.unreadIndicator} />}
-  </TouchableOpacity>
-);
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F4F7FA' },
-  header: { paddingHorizontal: 20, paddingBottom: 20, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  title: { fontSize: 28, fontWeight: '800', color: '#0F172A' },
-  content: { padding: 20 },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#94A3B8', letterSpacing: 1, marginBottom: 10, marginLeft: 4 },
-  cardContainer: { backgroundColor: '#FFFFFF', borderRadius: 20, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2, overflow: 'hidden' },
-  row: { flexDirection: 'row', padding: 16, borderBottomWidth: 1, borderBottomColor: '#F8FAFC', backgroundColor: '#FFFFFF' },
-  rowLast: { borderBottomWidth: 0 },
-  rowUnread: { backgroundColor: '#F0F9FF' },
-  iconWrapper: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
-  textContent: { flex: 1, justifyContent: 'center' },
-  notifTitle: { fontSize: 16, fontWeight: '600', color: '#1E293B', marginBottom: 2 },
-  textBold: { color: '#0F172A', fontWeight: '800' },
-  notifDesc: { fontSize: 14, color: '#475569', marginBottom: 6 },
-  notifTime: { fontSize: 12, color: '#94A3B8', fontWeight: '600' },
-  unreadIndicator: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#0EA5E9', marginTop: 6, marginLeft: 10 },
+const getStyles = (theme: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.colors.surface },
+  header: { paddingHorizontal: theme.spacing.screenPadding, paddingBottom: theme.spacing.md, backgroundColor: theme.colors.surface },
+  title: { ...theme.typography.styles.display, color: theme.colors.textPrimary },
+  
+  content: { paddingTop: theme.spacing.sm },
+  sectionTitle: { ...theme.typography.styles.sectionTitle, color: theme.colors.textMuted, marginBottom: theme.spacing.sm, paddingHorizontal: theme.spacing.screenPadding },
+  
+  row: { flexDirection: 'row', paddingHorizontal: theme.spacing.screenPadding, paddingTop: theme.spacing.lg, position: 'relative', backgroundColor: theme.colors.surface },
+  iconWrapper: { width: 40, height: 40, borderRadius: theme.radius.sm, alignItems: 'center', justifyContent: 'center', marginRight: theme.spacing.md },
+  
+  textContent: { flex: 1, paddingBottom: theme.spacing.lg, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  textContentLast: { borderBottomWidth: 0 },
+  
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  notifTitle: { ...theme.typography.styles.bodyMedium, color: theme.colors.textPrimary, flex: 1, marginRight: 8 },
+  textBold: { fontWeight: '700' },
+  notifDesc: { ...theme.typography.styles.caption, color: theme.colors.textSecondary, lineHeight: 20 },
+  notifTime: { ...theme.typography.styles.label, color: theme.colors.textMuted },
+  
+  unreadIndicator: { position: 'absolute', left: 10, top: '50%', marginTop: -4, width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.info },
 });

@@ -1,91 +1,124 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, SectionList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BookOpen, Calendar, CheckCircle, FileText, ClipboardList, Bus, Library, Award, FileClock, ChevronRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../theme/ThemeContext';
+import { TouchableBounce } from '../../components/TouchableBounce';
+
+// Static Data Helper
+const getSections = (theme: any) => [
+  {
+    title: 'Learning',
+    data: [
+      { id: 'homework', title: 'Homework', desc: 'Assignments and submissions', icon: BookOpen, color: theme.colors.academic, bg: theme.colors.academicBg, route: '/(student)/homework' },
+      { id: 'studyMaterial', title: 'Study Material', desc: 'Notes, PDFs and resources', icon: FileText, color: theme.colors.success, bg: theme.colors.successBg, route: '/(student)/study-material' },
+      { id: 'results', title: 'Results', desc: 'Report cards and grades', icon: Award, color: theme.colors.warning, bg: theme.colors.warningBg, route: '/(student)/results' },
+    ]
+  },
+  {
+    title: 'School',
+    data: [
+      { id: 'attendance', title: 'Attendance', desc: 'Daily attendance records', icon: CheckCircle, color: theme.colors.info, bg: theme.colors.infoBg, route: '/(student)/attendance' },
+      { id: 'calendar', title: 'Calendar', desc: 'Events and holidays', icon: Calendar, color: theme.colors.error, bg: theme.colors.errorBg, route: '/(student)/calendar' },
+      { id: 'circulars', title: 'Circulars', desc: 'Official school notices', icon: FileText, color: theme.colors.secondary, bg: theme.colors.successBg, route: '/(student)/circulars' },
+    ]
+  },
+  {
+    title: 'Services',
+    data: [
+      { id: 'fees', title: 'Fees', desc: 'Pending dues and receipts', icon: ClipboardList, color: theme.colors.error, bg: theme.colors.errorBg, route: '/(student)/fees' },
+      { id: 'library', title: 'Library', desc: 'Issued books and catalogue', icon: Library, color: theme.colors.academic, bg: theme.colors.academicBg, route: '/(student)/library' },
+      { id: 'transport', title: 'Transport', desc: 'Bus routes and driver info', icon: Bus, color: theme.colors.warning, bg: theme.colors.warningBg, route: '/(student)/transport' },
+      { id: 'applyLeave', title: 'Apply Leave', desc: 'Submit a new leave request', icon: FileClock, color: theme.colors.textSecondary, bg: theme.colors.borderLight, route: '/(student)/apply-leave' },
+    ]
+  }
+];
+
+// Memoized Row
+const AcademicRow = React.memo(({ item, isLast, isFirst, theme, styles, router }: any) => {
+  const Icon = item.icon;
+  
+  return (
+    <TouchableBounce 
+      bounceScale={0.98}
+      style={[
+        styles.row, 
+        isLast && styles.rowLast,
+        isFirst && styles.rowFirst
+      ]}
+      onPress={() => router.push(item.route)}
+    >
+      <View style={[styles.iconContainer, { backgroundColor: item.bg }]}>
+        <Icon color={item.color} size={20} />
+      </View>
+      <View style={styles.rowContent}>
+        <Text style={styles.rowTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.rowDesc} numberOfLines={1}>{item.desc}</Text>
+      </View>
+      <ChevronRight color={theme.colors.border} size={20} />
+    </TouchableBounce>
+  );
+});
 
 export default function AcademicsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-
-  const sections = [
-    {
-      title: 'Learning',
-      items: [
-        { id: 'homework', title: 'Homework', desc: 'Assignments and submissions', icon: BookOpen, color: '#8B5CF6', bg: '#EDE9FE', route: '/(student)/homework' },
-        { id: 'studyMaterial', title: 'Study Material', desc: 'Notes, PDFs and resources', icon: FileText, color: '#10B981', bg: '#D1FAE5', route: '/(student)/study-material' },
-        { id: 'results', title: 'Results', desc: 'Report cards and grades', icon: Award, color: '#F59E0B', bg: '#FEF3C7', route: '/(student)/results' },
-      ]
-    },
-    {
-      title: 'School',
-      items: [
-        { id: 'attendance', title: 'Attendance', desc: 'Daily attendance records', icon: CheckCircle, color: '#0EA5E9', bg: '#E0F2FE', route: '/(student)/attendance' },
-        { id: 'calendar', title: 'Calendar', desc: 'Events and holidays', icon: Calendar, color: '#EC4899', bg: '#FCE7F3', route: '/(student)/calendar' },
-        { id: 'circulars', title: 'Circulars', desc: 'Official school notices', icon: FileText, color: '#0D9488', bg: '#CCFBF1', route: '/(student)/circulars' },
-      ]
-    },
-    {
-      title: 'Services',
-      items: [
-        { id: 'fees', title: 'Fees', desc: 'Pending dues and receipts', icon: ClipboardList, color: '#F43F5E', bg: '#FFE4E6', route: '/(student)/fees' },
-        { id: 'library', title: 'Library', desc: 'Issued books and catalogue', icon: Library, color: '#6366F1', bg: '#E0E7FF', route: '/(student)/library' },
-        { id: 'transport', title: 'Transport', desc: 'Bus routes and driver info', icon: Bus, color: '#F97316', bg: '#FFEDD5', route: '/(student)/transport' },
-        { id: 'applyLeave', title: 'Apply Leave', desc: 'Submit a new leave request', icon: FileClock, color: '#64748B', bg: '#F1F5F9', route: '/(student)/apply-leave' },
-      ]
-    }
-  ];
+  const { theme } = useTheme();
+  
+  const styles = useMemo(() => getStyles(theme), [theme]);
+  const sections = useMemo(() => getSections(theme), [theme]);
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top + 8, 16) }]}>
         <Text style={styles.title}>Academics</Text>
       </View>
-      <ScrollView 
-        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 90 }]}
+      <SectionList 
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) }]}
         showsVerticalScrollIndicator={false}
-      >
-        {sections.map((section, idx) => (
-          <View key={idx} style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>{section.title.toUpperCase()}</Text>
-            <View style={styles.cardContainer}>
-              {section.items.map((item, itemIdx) => (
-                <TouchableOpacity 
-                  key={item.id} 
-                  style={[styles.row, itemIdx === section.items.length - 1 && styles.rowLast]}
-                  activeOpacity={0.6}
-                  onPress={() => router.push(item.route as any)}
-                >
-                  <View style={[styles.iconContainer, { backgroundColor: item.bg }]}>
-                    <item.icon color={item.color} size={22} />
-                  </View>
-                  <View style={styles.rowContent}>
-                    <Text style={styles.rowTitle} numberOfLines={1}>{item.title}</Text>
-                    <Text style={styles.rowDesc} numberOfLines={1}>{item.desc}</Text>
-                  </View>
-                  <ChevronRight color="#CBD5E1" size={20} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+        stickySectionHeadersEnabled={false}
+        initialNumToRender={15}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        renderSectionHeader={({ section: { title } }) => (
+          <Text style={styles.sectionTitle}>{title}</Text>
+        )}
+        renderItem={({ item, index, section }) => (
+          <AcademicRow 
+            item={item} 
+            isFirst={index === 0}
+            isLast={index === section.data.length - 1} 
+            theme={theme}
+            styles={styles}
+            router={router}
+          />
+        )}
+        SectionSeparatorComponent={() => <View style={{ height: theme.spacing.md }} />}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F4F7FA' },
-  header: { paddingHorizontal: 20, paddingBottom: 20, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  title: { fontSize: 28, fontWeight: '800', color: '#0F172A' },
-  content: { padding: 20 },
-  sectionContainer: { marginBottom: 24 },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#94A3B8', letterSpacing: 1, marginBottom: 10, marginLeft: 4 },
-  cardContainer: { backgroundColor: '#FFFFFF', borderRadius: 20, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 },
-  row: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#F1F5F9', minHeight: 72 },
-  rowLast: { borderBottomWidth: 0 },
-  iconContainer: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+const getStyles = (theme: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  header: { paddingHorizontal: theme.spacing.screenPadding, paddingBottom: theme.spacing.md, backgroundColor: theme.colors.background },
+  title: { ...theme.typography.styles.display, color: theme.colors.textPrimary },
+  
+  content: { paddingHorizontal: theme.spacing.screenPadding, paddingTop: theme.spacing.sm },
+  sectionTitle: { ...theme.typography.styles.sectionTitle, color: theme.colors.textSecondary, marginBottom: theme.spacing.sm, marginLeft: 16, marginTop: theme.spacing.md },
+  
+  row: { flexDirection: 'row', alignItems: 'center', padding: theme.spacing.md, paddingHorizontal: theme.spacing.lg, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderBottomWidth: 0 },
+  rowFirst: { borderTopLeftRadius: theme.radius.card, borderTopRightRadius: theme.radius.card },
+  rowLast: { borderBottomWidth: 1, borderBottomLeftRadius: theme.radius.card, borderBottomRightRadius: theme.radius.card },
+  
+  separator: { height: 1, backgroundColor: theme.colors.border, marginLeft: 68 }, // align with content, not icon
+  
+  iconContainer: { width: 36, height: 36, borderRadius: theme.radius.sm, alignItems: 'center', justifyContent: 'center', marginRight: theme.spacing.md },
   rowContent: { flex: 1, justifyContent: 'center' },
-  rowTitle: { fontSize: 16, fontWeight: '700', color: '#1E293B', marginBottom: 2 },
-  rowDesc: { fontSize: 14, color: '#64748B' },
+  rowTitle: { ...theme.typography.styles.bodyMedium, fontWeight: '600', color: theme.colors.textPrimary, marginBottom: 2 },
+  rowDesc: { ...theme.typography.styles.caption, color: theme.colors.textSecondary },
 });

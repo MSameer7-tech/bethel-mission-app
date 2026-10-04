@@ -1,9 +1,12 @@
 import React from 'react';
+import { useTheme } from '../../theme/ThemeContext';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Bus, MapPin, User, Phone, Clock } from 'lucide-react-native';
 import { studentProfile } from '@/data/students';
 
 export default function TransportScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const { transport } = studentProfile;
 
   return (
@@ -11,7 +14,7 @@ export default function TransportScreen() {
       <View style={styles.busCard}>
         <View style={styles.busHeader}>
           <View style={styles.iconContainer}>
-            <Bus color="#0284C7" size={32} />
+            <Bus color={theme.colors.primary} size={32} />
           </View>
           <View>
             <Text style={styles.busTitle}>Bus {transport.busNumber}</Text>
@@ -35,21 +38,21 @@ export default function TransportScreen() {
       <Text style={styles.sectionTitle}>Details</Text>
       
       <View style={styles.detailsCard}>
-        <DetailRow icon={<MapPin size={20} color="#64748B" />} label="Route" value={transport.route} />
-        <DetailRow icon={<Clock size={20} color="#64748B" />} label="Pickup Time" value={transport.pickupTime} />
-        <DetailRow icon={<User size={20} color="#64748B" />} label="Driver" value={transport.driverName} />
-        <DetailRow icon={<Phone size={20} color="#64748B" />} label="Contact" value={transport.driverContact} isLast />
+        <DetailRow styles={styles} icon={<MapPin size={20} color={theme.colors.textSecondary} />} label="Route" value={transport.route} />
+        <DetailRow styles={styles} icon={<Clock size={20} color={theme.colors.textSecondary} />} label="Pickup Time" value={transport.pickupTime} />
+        <DetailRow styles={styles} icon={<User size={20} color={theme.colors.textSecondary} />} label="Driver" value={transport.driverName} />
+        <DetailRow styles={styles} icon={<Phone size={20} color={theme.colors.textSecondary} />} label="Contact" value={transport.driverContact} isLast />
       </View>
 
       <TouchableOpacity style={styles.callButton} onPress={() => alert('Mock Call Triggered')}>
-        <Phone color="#FFFFFF" size={20} />
+        <Phone color={theme.colors.surface} size={20} />
         <Text style={styles.callButtonText}>Call Driver</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-const DetailRow = ( { icon, label, value, isLast = false }: any ) => (
+const DetailRow = ( { icon, label, value, styles, isLast = false }: any ) => (
   <View style={[styles.detailRow, !isLast && styles.detailRowBorder]}>
     <View style={styles.detailIcon}>{icon}</View>
     <View style={styles.detailContent}>
@@ -59,18 +62,18 @@ const DetailRow = ( { icon, label, value, isLast = false }: any ) => (
   </View>
 );
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
     padding: 16,
   },
   busCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     padding: 24,
-    borderRadius: 16,
+    borderRadius: theme.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     marginBottom: 24,
     alignItems: 'center',
   },
@@ -83,7 +86,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#F0F9FF',
+    backgroundColor: theme.colors.infoBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -91,11 +94,11 @@ const styles = StyleSheet.create({
   busTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#0F172A',
+    color: theme.colors.textPrimary,
   },
   busSubtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: theme.colors.textSecondary,
   },
   routeContainer: {
     width: '100%',
@@ -109,35 +112,35 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#0284C7',
+    backgroundColor: theme.colors.primary,
     marginRight: 12,
   },
   dotEnd: {
-    backgroundColor: '#16A34A',
+    backgroundColor: theme.colors.success,
   },
   routeLine: {
     width: 2,
     height: 30,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: theme.colors.border,
     marginLeft: 5,
     marginVertical: 4,
   },
   routeText: {
     fontSize: 16,
-    color: '#1E293B',
+    color: theme.colors.textPrimary,
     fontWeight: '500',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0F172A',
+    color: theme.colors.textPrimary,
     marginBottom: 16,
   },
   detailsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     marginBottom: 24,
   },
   detailRow: {
@@ -147,13 +150,13 @@ const styles = StyleSheet.create({
   },
   detailRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: theme.colors.borderLight,
   },
   detailIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -163,25 +166,25 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    color: '#64748B',
+    color: theme.colors.textSecondary,
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1E293B',
+    color: theme.colors.textPrimary,
   },
   callButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0284C7',
+    backgroundColor: theme.colors.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: theme.radius.card,
     gap: 8,
   },
   callButtonText: {
-    color: '#FFFFFF',
+    color: theme.colors.surface,
     fontSize: 16,
     fontWeight: 'bold',
   },

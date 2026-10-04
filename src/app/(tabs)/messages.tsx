@@ -1,93 +1,163 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, SectionList, TextInput } from 'react-native';
 import { Search } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../theme/ThemeContext';
+import { TouchableBounce } from '../../components/TouchableBounce';
 
+// Static data outside component
 const unreadMessages = [
-  { id: 1, name: 'Pushpendra Singh', subject: 'Mathematics', message: 'Please ensure you submit the quadratic equations assignment by tomorrow morning.', time: '10:30 AM', unread: true },
+  { id: 1, name: 'Pushpendra Singh', initials: 'PS', subject: 'Mathematics', message: 'Please ensure you submit the quadratic equations assignment by tomorrow morning.', time: '10:30 AM', unread: true, bgKey: 'infoBg', colorKey: 'info' },
 ];
 
 const otherMessages = [
-  { id: 2, name: 'Anita Sharma', subject: 'Science', message: 'The science lab will be closed on Friday due to maintenance.', time: 'Yesterday', unread: false },
-  { id: 3, name: 'Neha Verma', subject: 'English', message: 'Well done on your recent essay. Keep up the good work.', time: '12 Oct', unread: false },
+  { id: 2, name: 'Anita Sharma', initials: 'AS', subject: 'Science', message: 'The science lab will be closed on Friday due to maintenance.', time: 'Yesterday', unread: false, bgKey: 'academicBg', colorKey: 'academic' },
+  { id: 3, name: 'Neha Verma', initials: 'NV', subject: 'English', message: 'Well done on your recent essay. Keep up the good work.', time: '12 Oct', unread: false, bgKey: 'successBg', colorKey: 'success' },
+  { id: 4, name: 'Rahul Desai', initials: 'RD', subject: 'History', message: 'Chapter 4 notes have been uploaded to the portal.', time: '10 Oct', unread: false, bgKey: 'warningBg', colorKey: 'warning' },
 ];
+
+const MessageRow = React.memo(({ msg, theme, styles }: any) => {
+  const isUnread = msg.unread;
+  const avatarBg = theme.colors[msg.bgKey];
+  const avatarText = theme.colors[msg.colorKey];
+
+  return (
+    <TouchableBounce 
+      bounceScale={0.96} 
+      style={[
+        styles.messageCard, 
+        isUnread && { backgroundColor: theme.colors.infoBg, borderColor: theme.mode === 'dark' ? theme.colors.borderLight : 'transparent' }
+      ]}
+    >
+      <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
+        <Text style={[styles.avatarText, { color: avatarText }]}>{msg.initials}</Text>
+      </View>
+      <View style={styles.messageContent}>
+        <View style={styles.nameRow}>
+          <Text style={[styles.senderName, isUnread && styles.textBold]} numberOfLines={1}>{msg.name}</Text>
+          <View style={styles.timeContainer}>
+            <Text style={[styles.timeText, isUnread && styles.timeTextUnread]}>{msg.time}</Text>
+            {isUnread && <View style={styles.unreadDotIndicator} />}
+          </View>
+        </View>
+        <Text style={[styles.subjectText, isUnread && styles.textBold]} numberOfLines={1}>{msg.subject}</Text>
+        <Text style={styles.previewText} numberOfLines={2}>{msg.message}</Text>
+      </View>
+    </TouchableBounce>
+  );
+});
 
 export default function MessagesScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
+  const sections = useMemo(() => [
+    { title: 'UNREAD', data: unreadMessages },
+    { title: 'EARLIER', data: otherMessages }
+  ], []);
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top + 8, 16) }]}>
         <Text style={styles.title}>Messages</Text>
         <View style={styles.searchBar}>
-          <Search color="#94A3B8" size={20} />
+          <Search color={theme.colors.textMuted} size={20} />
           <TextInput 
             placeholder="Search conversations"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={theme.colors.textMuted}
             style={styles.searchInput}
           />
         </View>
       </View>
       
-      <ScrollView 
-        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 90 }]}
+      <SectionList 
+        sections={sections}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 24) }]}
         showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.sectionTitle}>UNREAD</Text>
-        <View style={styles.cardContainer}>
-          {unreadMessages.map((msg, idx) => (
-            <MessageRow key={msg.id} msg={msg} isLast={idx === unreadMessages.length - 1} />
-          ))}
-        </View>
-
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>EARLIER</Text>
-        <View style={styles.cardContainer}>
-          {otherMessages.map((msg, idx) => (
-            <MessageRow key={msg.id} msg={msg} isLast={idx === otherMessages.length - 1} />
-          ))}
-        </View>
-      </ScrollView>
+        stickySectionHeadersEnabled={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        renderSectionHeader={({ section: { title } }) => (
+          <Text style={[styles.sectionTitle, title === 'EARLIER' && { marginTop: 12 }]}>
+            {title}
+          </Text>
+        )}
+        renderItem={({ item }) => (
+          <MessageRow 
+            msg={item} 
+            theme={theme} 
+            styles={styles} 
+          />
+        )}
+      />
     </View>
   );
 }
 
-const MessageRow = ({ msg, isLast }: any) => (
-  <TouchableOpacity style={[styles.messageRow, isLast && styles.rowLast]} activeOpacity={0.6}>
-    <View style={styles.avatar}>
-      <Text style={styles.avatarText}>{msg.name.charAt(0)}</Text>
-      {msg.unread && <View style={styles.unreadDot} />}
-    </View>
-    <View style={styles.messageContent}>
-      <View style={styles.nameRow}>
-        <Text style={[styles.senderName, msg.unread && styles.textBold]} numberOfLines={1}>{msg.name}</Text>
-        <Text style={[styles.timeText, msg.unread && styles.timeTextUnread]}>{msg.time}</Text>
-      </View>
-      <Text style={styles.subjectText} numberOfLines={1}>{msg.subject}</Text>
-      <Text style={[styles.previewText, msg.unread && styles.textBold]} numberOfLines={1}>{msg.message}</Text>
-    </View>
-  </TouchableOpacity>
-);
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F4F7FA' },
-  header: { paddingHorizontal: 20, paddingBottom: 20, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  title: { fontSize: 28, fontWeight: '800', color: '#0F172A', marginBottom: 16 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F1F5F9', borderRadius: 12, paddingHorizontal: 12, height: 44 },
-  searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#0F172A', height: '100%' },
-  content: { padding: 20 },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#94A3B8', letterSpacing: 1, marginBottom: 10, marginLeft: 4 },
-  cardContainer: { backgroundColor: '#FFFFFF', borderRadius: 20, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 },
-  messageRow: { flexDirection: 'row', padding: 16, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' },
-  rowLast: { borderBottomWidth: 0 },
-  avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#E0F2FE', alignItems: 'center', justifyContent: 'center', marginRight: 16, position: 'relative' },
-  avatarText: { fontSize: 20, fontWeight: 'bold', color: '#0B3B60' },
-  unreadDot: { position: 'absolute', top: 0, right: -2, width: 14, height: 14, borderRadius: 7, backgroundColor: '#0EA5E9', borderWidth: 2, borderColor: '#FFFFFF' },
-  messageContent: { flex: 1, justifyContent: 'center' },
+const getStyles = (theme: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  header: { paddingHorizontal: 20, paddingBottom: 16, backgroundColor: theme.colors.background },
+  title: { ...theme.typography.styles.display, color: theme.colors.textPrimary, marginBottom: 16 },
+  
+  searchBar: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: theme.colors.input, 
+    borderRadius: 16, 
+    paddingHorizontal: 16, 
+    height: 48 
+  },
+  searchInput: { 
+    flex: 1, 
+    marginLeft: 10, 
+    fontSize: 16, 
+    color: theme.colors.textPrimary, 
+    height: '100%' 
+  },
+  
+  content: { paddingBottom: 20 },
+  sectionTitle: { 
+    ...theme.typography.styles.sectionTitle, 
+    color: theme.colors.textMuted, 
+    marginBottom: 12, 
+    paddingHorizontal: 20 
+  },
+  
+  messageCard: { 
+    flexDirection: 'row', 
+    marginHorizontal: 20,
+    marginBottom: 12,
+    padding: 16,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    ...theme.shadows.card
+  },
+  
+  avatar: { 
+    width: 48, 
+    height: 48, 
+    borderRadius: 24, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginRight: 16 
+  },
+  avatarText: { fontSize: 18, fontWeight: '700' },
+  
+  messageContent: { flex: 1 },
+  
   nameRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
-  senderName: { fontSize: 16, fontWeight: '700', color: '#1E293B', flex: 1, marginRight: 8 },
-  timeText: { fontSize: 12, color: '#94A3B8' },
-  timeTextUnread: { color: '#0EA5E9', fontWeight: '800' },
-  subjectText: { fontSize: 14, color: '#0D9488', fontWeight: '600', marginBottom: 4 },
-  previewText: { fontSize: 14, color: '#64748B', lineHeight: 20 },
-  textBold: { fontWeight: '800', color: '#0F172A' },
+  senderName: { ...theme.typography.styles.bodyMedium, color: theme.colors.textPrimary, flex: 1, marginRight: 8 },
+  timeContainer: { flexDirection: 'row', alignItems: 'center' },
+  timeText: { ...theme.typography.styles.caption, color: theme.colors.textMuted },
+  timeTextUnread: { color: theme.colors.info, fontWeight: '700' },
+  unreadDotIndicator: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.info, marginLeft: 6 },
+  
+  subjectText: { ...theme.typography.styles.bodyMedium, color: theme.colors.textPrimary, marginBottom: 4 },
+  previewText: { ...theme.typography.styles.caption, color: theme.colors.textSecondary, lineHeight: 20 },
+  textBold: { fontWeight: '700', color: theme.colors.textPrimary },
 });

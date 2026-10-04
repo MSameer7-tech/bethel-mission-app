@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Home, BookOpen, MessageSquare, Bell, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -8,9 +8,8 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withTiming,
-  interpolate,
-  Extrapolation,
 } from 'react-native-reanimated';
+import { useTheme } from '../../theme/ThemeContext';
 
 const TAB_CONFIG = [
   { name: 'index', label: 'Home', icon: Home },
@@ -20,23 +19,24 @@ const TAB_CONFIG = [
   { name: 'profile', label: 'Profile', icon: User },
 ];
 
-const SPRING_CONFIG = { damping: 15, stiffness: 200, mass: 0.5 };
+const SPRING_CONFIG = { damping: 20, stiffness: 300, mass: 0.5 };
 
-function AnimatedTabItem({ tab, focused, onPress }: any) {
+function AnimatedTabItem({ tab, focused, onPress, theme }: any) {
   const scale = useSharedValue(1);
   const IconComponent = tab.icon;
+  const styles = getStyles(theme);
 
   const animatedIconStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
   const animatedPillStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(focused ? 1 : 0, { duration: 200 }),
-    transform: [{ scaleX: withSpring(focused ? 1 : 0.5, SPRING_CONFIG) }],
+    opacity: withTiming(focused ? 1 : 0, { duration: 150 }),
+    transform: [{ scaleX: withSpring(focused ? 1 : 0.6, SPRING_CONFIG) }],
   }));
 
   const handlePressIn = useCallback(() => {
-    scale.value = withSpring(0.85, SPRING_CONFIG);
+    scale.value = withSpring(0.9, SPRING_CONFIG);
   }, []);
 
   const handlePressOut = useCallback(() => {
@@ -53,9 +53,9 @@ function AnimatedTabItem({ tab, focused, onPress }: any) {
       <Animated.View style={[styles.iconWrapper, animatedIconStyle]}>
         <Animated.View style={[styles.iconPill, animatedPillStyle]} />
         <IconComponent
-          color={focused ? '#0B3B60' : '#94A3B8'}
+          color={focused ? theme.colors.navActive : theme.colors.navInactive}
           size={22}
-          strokeWidth={focused ? 2.5 : 1.8}
+          strokeWidth={focused ? 2.5 : 2}
         />
       </Animated.View>
       <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
@@ -67,9 +67,11 @@ function AnimatedTabItem({ tab, focused, onPress }: any) {
 
 function CustomTabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
 
   return (
-    <View style={[styles.tabBarOuter, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+    <View style={[styles.tabBarOuter, { paddingBottom: Math.max(insets.bottom, 4) }]}>
       <View style={styles.tabBarInner}>
         {TAB_CONFIG.map((tab, index) => {
           const focused = state.index === index;
@@ -78,6 +80,7 @@ function CustomTabBar({ state, navigation }: any) {
               key={tab.name}
               tab={tab}
               focused={focused}
+              theme={theme}
               onPress={() => {
                 const event = navigation.emit({
                   type: 'tabPress',
@@ -97,11 +100,13 @@ function CustomTabBar({ state, navigation }: any) {
 }
 
 export default function TabLayout() {
+  const { theme } = useTheme();
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
+        sceneStyle: { backgroundColor: theme.colors.background },
         lazy: true,
       }}
     >
@@ -114,68 +119,51 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   tabBarOuter: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    backgroundColor: 'transparent',
+    backgroundColor: theme.colors.navBackground, 
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    shadowColor: '#111827',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 8,
+    elevation: 4,
   },
   tabBarInner: {
     flexDirection: 'row',
-    height: 68,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    height: 56, 
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 4,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
+    paddingHorizontal: 8,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 68,
+    height: '100%',
   },
   iconWrapper: {
-    width: 44,
+    width: 48,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
-    marginBottom: 3,
-    position: 'relative',
+    marginBottom: 2,
   },
   iconPill: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#E0F2FE',
-    borderRadius: 16,
+    width: 48,
+    height: 30,
+    backgroundColor: theme.colors.navActiveBg, 
+    borderRadius: 15,
   },
   tabLabel: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '600',
+    fontSize: 10,
+    color: theme.colors.navInactive,
+    fontWeight: '500',
   },
   tabLabelFocused: {
-    color: '#0B3B60',
-    fontWeight: '800',
+    color: theme.colors.navActive,
+    fontWeight: '600',
   },
 });

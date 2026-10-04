@@ -1,245 +1,271 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, CheckCircle, BookOpen, CreditCard, ChevronRight, Bell, FileText } from 'lucide-react-native';
-import { studentProfile, attendanceSummary } from '@/data/students';
-import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle } from 'react-native-svg';
+import { Calendar, FileText, CheckCircle, CreditCard, BookOpen, ChevronRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from 'react-native-reanimated';
+import { useTheme } from '../../theme/ThemeContext';
+import { TouchableBounce } from '../../components/TouchableBounce';
+import Svg, { Circle } from 'react-native-svg';
+import { useStudentProfile } from '../../hooks/useStudentProfile';
+import { useAttendance } from '../../hooks/useAttendance';
+import { ActivityIndicator } from 'react-native';
 
-const ENTRANCE_DURATION = 400;
-const STAGGER = 80;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const QA_CARD_WIDTH = (SCREEN_WIDTH - 40 - 14) / 2; // 40 = 20px padding each side, 14 = gap
 
-export default function StudentDashboard() {
+export default function DashboardScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const { data: student, loading, error } = useStudentProfile();
+  const { summary: attendanceSummary, loading: attendanceLoading } = useAttendance();
 
-  // Entrance animation
-  const entrance = useSharedValue(0);
-  useEffect(() => {
-    entrance.value = withTiming(1, { duration: ENTRANCE_DURATION, easing: Easing.out(Easing.cubic) });
-  }, []);
-
-  const makeEntranceStyle = (index: number) =>
-    useAnimatedStyle(() => ({
-      opacity: withDelay(index * STAGGER, withTiming(entrance.value, { duration: ENTRANCE_DURATION })),
-      transform: [
-        { translateY: withDelay(index * STAGGER, withTiming((1 - entrance.value) * 16, { duration: ENTRANCE_DURATION })) },
-      ],
-    }));
-
-  const radius = 32;
-  const strokeWidth = 8;
+  const radius = 28;
+  const strokeWidth = 6;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (attendanceSummary.percentage / 100) * circumference;
+  const attendancePct = attendanceSummary?.percentage ?? 0;
+  const strokeDashoffset = circumference - ((attendancePct / 100) * circumference);
 
   return (
     <ScrollView 
       style={styles.container} 
-      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top + 8, 16), paddingBottom: Math.max(insets.bottom, 16) + 90 }]}
+      contentContainerStyle={[styles.content, { 
+        paddingTop: Math.max(insets.top, 24),
+        paddingBottom: Math.max(insets.bottom, 24) + 60 
+      }]}
       showsVerticalScrollIndicator={false}
     >
-      {/* HEADER HERO */}
-      <Animated.View style={makeEntranceStyle(0)}>
-      <LinearGradient 
-        colors={['#0B3B60', '#0D9488']} 
-        start={{ x: 0, y: 0 }} 
-        end={{ x: 1, y: 1 }} 
-        style={styles.heroCard}
-      >
-        <View style={styles.heroTop}>
-          <View style={styles.schoolLogo}>
-            <Text style={styles.schoolLogoText}>BMS</Text>
-          </View>
-          <TouchableOpacity style={styles.notificationBtn} onPress={() => router.push('/(tabs)/notifications')}>
-            <Bell color="#FFFFFF" size={20} />
-            <View style={styles.notificationDot} />
-          </TouchableOpacity>
+      {/* 1. STUDENT HEADER */}
+      <View style={styles.header}>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.schoolLogoText}>BETHEL MISSION</Text>
+          
+          {loading ? (
+            <View style={{ gap: 4, marginTop: 4 }}>
+               <View style={{ height: 24, width: 150, backgroundColor: theme.colors.surfaceSecondary, borderRadius: 4 }} />
+               <View style={{ height: 28, width: 200, backgroundColor: theme.colors.surfaceSecondary, borderRadius: 4 }} />
+               <View style={{ height: 16, width: 120, backgroundColor: theme.colors.surfaceSecondary, borderRadius: 4 }} />
+            </View>
+          ) : error ? (
+            <Text style={[styles.greetingText, { color: theme.colors.error, marginTop: 8 }]}>{error}</Text>
+          ) : (
+            <>
+              <Text style={styles.greetingText}>
+                Good morning, {student?.firstName ?? 'Student'} 👋
+              </Text>
+              <Text style={styles.studentName}>
+                {student?.firstName} {student?.lastName}
+              </Text>
+              <Text style={styles.studentClass}>
+                {student?.className} {student?.sectionName !== 'Unassigned' ? `- ${student?.sectionName}` : ''} · {student?.academicYear}
+              </Text>
+            </>
+          )}
         </View>
-
-        <View style={styles.heroContent}>
-          <View style={styles.heroText}>
-            <Text style={styles.greetingText}>Good Morning 👋</Text>
-            <Text style={styles.studentName} numberOfLines={1}>{studentProfile.name}</Text>
-            <Text style={styles.studentClass}>{studentProfile.class}-{studentProfile.section} • {studentProfile.academicYear}</Text>
-          </View>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/profile')} style={styles.profileAvatar}>
-            <Text style={styles.profileInitials}>JS</Text>
-          </TouchableOpacity>
+        
+        <View style={styles.avatar}>
+          {loading ? (
+            <ActivityIndicator color={theme.colors.primary} />
+          ) : (
+            <Text style={styles.avatarInitials}>
+              {student?.firstName?.[0] ?? 'S'}
+              {student?.lastName?.[0] ?? ''}
+            </Text>
+          )}
         </View>
-      </LinearGradient>
-      </Animated.View>
+      </View>
 
-      {/* COMPACT INFO ROW: ATTENDANCE + UP NEXT */}
-      <Animated.View style={makeEntranceStyle(1)}>
-      <View style={styles.infoRow}>
-        <TouchableOpacity 
-          style={styles.attendanceHalf} 
-          activeOpacity={0.8}
-          onPress={() => router.push('/(student)/attendance')}
-        >
+      {/* 2. SUMMARY CARDS (Strict Fixed Height & Layout) */}
+      <View style={styles.summaryRow}>
+        
+        {/* ATTENDANCE CARD */}
+        <TouchableBounce bounceScale={0.96} style={[styles.summaryCard, { flex: 1.25 }]} onPress={() => router.push('/(student)/attendance')}>
           <Text style={styles.sectionHeading}>ATTENDANCE</Text>
-          <View style={styles.attendanceContent}>
+          <View style={styles.attendanceInner}>
             <View style={styles.progressRingContainer}>
-              <Svg width={72} height={72} viewBox="0 0 72 72">
-                <Circle cx="36" cy="36" r={radius} stroke="#F1F5F9" strokeWidth={strokeWidth} fill="none" />
+              <Svg width={64} height={64} viewBox="0 0 64 64">
+                <Circle cx="32" cy="32" r={radius} stroke={theme.colors.borderLight} strokeWidth={strokeWidth} fill="none" />
                 <Circle 
-                  cx="36" cy="36" r={radius} 
-                  stroke="#0D9488" strokeWidth={strokeWidth} 
+                  cx="32" cy="32" r={radius} 
+                  stroke={theme.colors.success} strokeWidth={strokeWidth} 
                   fill="none" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round" rotation="-90" origin="36, 36"
+                  strokeLinecap="round" rotation="-90" origin="32, 32"
                 />
               </Svg>
               <View style={styles.progressRingTextContainer}>
-                <Text style={styles.progressRingText}>{attendanceSummary.percentage}%</Text>
+                {attendanceLoading ? (
+                  <ActivityIndicator color={theme.colors.success} size="small" />
+                ) : (
+                  <Text style={styles.progressRingText}>{attendancePct}%</Text>
+                )}
               </View>
             </View>
             <View style={styles.attendanceStats}>
-              <Text style={styles.statLine}><Text style={{color:'#10B981'}}>●</Text> {attendanceSummary.present} P</Text>
-              <Text style={styles.statLine}><Text style={{color:'#F43F5E'}}>●</Text> {attendanceSummary.absent} A</Text>
+              <View style={styles.statLineWrapper}>
+                <View style={[styles.statDot, { backgroundColor: theme.colors.success }]} />
+                <Text style={styles.statLine} numberOfLines={1}>{attendanceSummary?.present ?? 0} Present</Text>
+              </View>
+              <View style={styles.statLineWrapper}>
+                <View style={[styles.statDot, { backgroundColor: theme.colors.error }]} />
+                <Text style={styles.statLine} numberOfLines={1}>{attendanceSummary?.absent ?? 0} Absent</Text>
+              </View>
             </View>
           </View>
-        </TouchableOpacity>
+        </TouchableBounce>
 
-        <TouchableOpacity 
-          style={styles.upNextHalf} 
-          activeOpacity={0.8}
-          onPress={() => router.push('/(student)/results')}
-        >
+        {/* UP NEXT CARD */}
+        <TouchableBounce bounceScale={0.96} style={[styles.summaryCard, { flex: 1 }]} onPress={() => router.push('/(student)/homework')}>
           <Text style={styles.sectionHeading}>UP NEXT</Text>
-          <View style={styles.upNextIconRow}>
-            <View style={styles.timelineDot} />
-            <Text style={styles.upNextTitle} numberOfLines={1}>Math Unit Test</Text>
+          <View style={styles.upNextInner}>
+            <View>
+              <View style={styles.upNextIconRow}>
+                <View style={[styles.statDot, { backgroundColor: theme.colors.info }]} />
+                <Text style={styles.upNextTitle} numberOfLines={1}>Math Unit Test</Text>
+              </View>
+              <Text style={styles.upNextTime} numberOfLines={1}>Tomorrow · 10:00 AM</Text>
+            </View>
+            <View style={styles.upNextAction}>
+              <Text style={styles.upNextActionText}>View Exam</Text>
+              <ChevronRight color={theme.colors.info} size={14} />
+            </View>
           </View>
-          <Text style={styles.upNextTime}>Tomorrow, 10:00 AM</Text>
-        </TouchableOpacity>
-      </View>
-      </Animated.View>
+        </TouchableBounce>
 
-      {/* FEE REMINDER */}
-      <Animated.View style={makeEntranceStyle(2)}>
-      <TouchableOpacity 
-        style={styles.feeCard}
-        activeOpacity={0.8}
-        onPress={() => router.push('/(student)/fees')}
-      >
+      </View>
+
+      {/* 3. FEE CARD */}
+      <TouchableBounce bounceScale={0.98} style={styles.feeCard} onPress={() => router.push('/(student)/fees')}>
         <View style={styles.feeLeft}>
           <Text style={styles.feeHeading}>FEE DUE</Text>
           <Text style={styles.feeAmount}>₹2,500</Text>
-          <Text style={styles.feeDate}>Due 10 Oct</Text>
+          <Text style={styles.feeDate}>Due 10 October</Text>
         </View>
         <View style={styles.feePayBtn}>
-          <Text style={styles.feePayBtnText}>Pay →</Text>
+          <Text style={styles.feePayBtnText}>Pay Fee</Text>
+          <ChevronRight color={theme.colors.surface} size={16} />
         </View>
-      </TouchableOpacity>
-      </Animated.View>
+      </TouchableBounce>
 
-      {/* QUICK ACCESS */}
-      <Animated.View style={makeEntranceStyle(3)}>
-      <Text style={styles.sectionTitle}>QUICK ACCESS</Text>
+      {/* 4. QUICK ACCESS */}
+      <View style={styles.sectionHeaderSpacing}>
+        <Text style={styles.sectionTitle}>QUICK ACCESS</Text>
+      </View>
       <View style={styles.quickAccessGrid}>
-        <QuickAccessTile icon={CheckCircle} color="#0EA5E9" bg="#E0F2FE" label="Attendance" route="/(student)/attendance" router={router} />
-        <QuickAccessTile icon={BookOpen} color="#8B5CF6" bg="#EDE9FE" label="Homework" route="/(student)/homework" router={router} />
-        <QuickAccessTile icon={FileText} color="#10B981" bg="#D1FAE5" label="Results" route="/(student)/results" router={router} />
-        <QuickAccessTile icon={CreditCard} color="#F43F5E" bg="#FFE4E6" label="Fees" route="/(student)/fees" router={router} />
-        <QuickAccessTile icon={Calendar} color="#F59E0B" bg="#FEF3C7" label="Calendar" route="/(student)/calendar" router={router} />
-        <QuickAccessTile icon={BookOpen} color="#0D9488" bg="#CCFBF1" label="Materials" route="/(student)/study-material" router={router} />
+        <View style={styles.qaRow}>
+          <QuickAccessTile icon={CheckCircle} color={theme.colors.success} bg={theme.colors.successBg} label="Attendance" route="/(student)/attendance" router={router} styles={styles} />
+          <QuickAccessTile icon={BookOpen} color={theme.colors.academic} bg={theme.colors.academicBg} label="Homework" route="/(student)/homework" router={router} styles={styles} />
+        </View>
+        <View style={styles.qaRow}>
+          <QuickAccessTile icon={FileText} color={theme.colors.info} bg={theme.colors.infoBg} label="Results" route="/(student)/results" router={router} styles={styles} />
+          <QuickAccessTile icon={CreditCard} color={theme.colors.error} bg={theme.colors.errorBg} label="Fees" route="/(student)/fees" router={router} styles={styles} />
+        </View>
+        <View style={styles.qaRow}>
+          <QuickAccessTile icon={Calendar} color={theme.colors.warning} bg={theme.colors.warningBg} label="Calendar" route="/(student)/calendar" router={router} styles={styles} />
+          <QuickAccessTile icon={BookOpen} color={theme.colors.primary} bg={theme.colors.infoBg} label="Study Material" route="/(student)/study-material" router={router} styles={styles} />
+        </View>
       </View>
-      </Animated.View>
 
-      {/* RECENT ACTIVITY */}
-      <Animated.View style={makeEntranceStyle(4)}>
-      <Text style={styles.sectionTitle}>RECENT ACTIVITY</Text>
-      <View style={styles.activityContainer}>
-        <ActivityItem title="Science homework uploaded" time="2 hours ago" color="#8B5CF6" />
-        <ActivityItem title="PTM scheduled" time="5 hours ago" color="#0EA5E9" />
-        <ActivityItem title="Maths material added" time="Yesterday" color="#10B981" isLast />
+      {/* 5. RECENT ACTIVITY */}
+      <View style={styles.sectionHeaderSpacing}>
+        <Text style={styles.sectionTitle}>RECENT ACTIVITY</Text>
       </View>
-      </Animated.View>
+      <View style={styles.activityContainer}>
+        <ActivityItem title="Science homework uploaded" time="2 hours ago" color={theme.colors.academic} styles={styles} />
+        <ActivityItem title="Parent Teacher Meeting scheduled" time="5 hours ago" color={theme.colors.info} styles={styles} />
+        <ActivityItem title="Mathematics study material added" time="Yesterday" color={theme.colors.success} isLast styles={styles} />
+      </View>
+      
     </ScrollView>
   );
 }
 
-const QuickAccessTile = ({ icon: Icon, color, bg, label, route, router }: any) => (
-  <TouchableOpacity 
-    style={styles.qaTile} 
-    activeOpacity={0.7}
-    onPress={() => router.push(route)}
-  >
+const QuickAccessTile = React.memo(({ icon: Icon, color, bg, label, route, router, styles }: any) => (
+  <TouchableBounce bounceScale={0.96} style={styles.qaTile} onPress={() => router.push(route)}>
     <View style={[styles.qaIconWrapper, { backgroundColor: bg }]}>
-      <Icon color={color} size={24} />
+      <Icon color={color} size={20} strokeWidth={2.5} />
     </View>
     <Text style={styles.qaLabel} numberOfLines={1}>{label}</Text>
-  </TouchableOpacity>
-);
+  </TouchableBounce>
+));
 
-const ActivityItem = ({ title, time, color, isLast = false }: any) => (
+const ActivityItem = React.memo(({ title, time, color, isLast = false, styles }: any) => (
   <View style={styles.activityItem}>
     <View style={styles.activityTimeline}>
       <View style={[styles.activityDot, { backgroundColor: color }]} />
       {!isLast && <View style={styles.activityLine} />}
     </View>
-    <View style={styles.activityContent}>
+    <TouchableBounce bounceScale={0.98} style={styles.activityContent}>
       <Text style={styles.activityTitle} numberOfLines={1}>{title}</Text>
       <Text style={styles.activityTime}>{time}</Text>
-    </View>
+    </TouchableBounce>
   </View>
-);
+));
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F4F7FA' },
+const getStyles = (theme: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.colors.background },
   content: { paddingHorizontal: 20 },
-  heroCard: { borderRadius: 24, padding: 24, marginBottom: 20, shadowColor: '#0B3B60', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 6 },
-  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  schoolLogo: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
-  schoolLogoText: { color: '#FFFFFF', fontWeight: '900', fontSize: 13, letterSpacing: 1 },
-  notificationBtn: { padding: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, position: 'relative' },
-  notificationDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#F43F5E', borderWidth: 1.5, borderColor: '#0D9488' },
-  heroContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  heroText: { flex: 1, paddingRight: 16 },
-  greetingText: { color: '#E0F2FE', fontSize: 15, fontWeight: '600', marginBottom: 6 },
-  studentName: { color: '#FFFFFF', fontSize: 26, fontWeight: 'bold', marginBottom: 4 },
-  studentClass: { color: '#CCFBF1', fontSize: 14, fontWeight: '500' },
-  profileAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8 },
-  profileInitials: { color: '#0B3B60', fontWeight: '800', fontSize: 20 },
   
-  infoRow: { flexDirection: 'row', gap: 16, marginBottom: 20 },
-  attendanceHalf: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 },
-  upNextHalf: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 },
-  sectionHeading: { fontSize: 12, fontWeight: '800', color: '#94A3B8', letterSpacing: 1, marginBottom: 12 },
-  attendanceContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  progressRingContainer: { position: 'relative', width: 72, height: 72, alignItems: 'center', justifyContent: 'center' },
+  // Section Spacing Rhythm (Strict mappings)
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 20 },
+  summaryRow: { flexDirection: 'row', gap: 14, marginBottom: 16 },
+  feeCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.colors.feeCardBg, padding: 16, borderRadius: 18, marginBottom: 26, borderWidth: 1, borderColor: theme.colors.feeCardBorder, height: 110 },
+  sectionHeaderSpacing: { marginBottom: 12 },
+  quickAccessGrid: { gap: 14, marginBottom: 26 },
+  
+  // Header Content
+  headerTextContainer: { flex: 1, paddingRight: 16 },
+  schoolLogoText: { color: theme.colors.textMuted, fontWeight: '700', fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 2 },
+  greetingText: { fontSize: 15, fontWeight: '500', color: theme.colors.textSecondary, marginBottom: 2 },
+  studentName: { fontSize: 22, fontWeight: '800', color: theme.colors.textPrimary, marginBottom: 2 },
+  studentClass: { fontSize: 14, fontWeight: '500', color: theme.colors.textSecondary },
+  avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: theme.colors.infoBg, alignItems: 'center', justifyContent: 'center' },
+  avatarInitials: { color: theme.colors.info, fontWeight: '700', fontSize: 18 },
+  
+  // Base Card Styles
+  summaryCard: { flex: 1, backgroundColor: theme.colors.surface, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: theme.colors.border, ...theme.shadows.card, height: 150 },
+  sectionHeading: { fontSize: 12, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1 },
+  sectionTitle: { fontSize: 13, fontWeight: '800', color: theme.colors.textMuted, letterSpacing: 1, marginLeft: 4 },
+  
+  // Attendance Sub-layout
+  attendanceInner: { flexDirection: 'row', alignItems: 'center', marginTop: 14, gap: 12 },
+  progressRingContainer: { position: 'relative', width: 64, height: 64, alignItems: 'center', justifyContent: 'center' },
   progressRingTextContainer: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  progressRingText: { fontSize: 16, fontWeight: '800', color: '#0D9488' },
-  attendanceStats: { flex: 1 },
-  statLine: { fontSize: 13, fontWeight: '700', color: '#334155', marginBottom: 4 },
+  progressRingText: { fontSize: 15, fontWeight: '800', color: theme.colors.textPrimary },
+  attendanceStats: { gap: 8, flex: 1, justifyContent: 'center' },
+  statLineWrapper: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statDot: { width: 6, height: 6, borderRadius: 3 },
+  statLine: { fontSize: 13, fontWeight: '600', color: theme.colors.textPrimary, flexShrink: 1 },
   
-  upNextIconRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 },
-  timelineDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#0EA5E9' },
-  upNextTitle: { fontSize: 16, fontWeight: '700', color: '#0F172A', flex: 1 },
-  upNextTime: { fontSize: 14, color: '#0EA5E9', fontWeight: '600', paddingLeft: 18 },
+  // Up Next Sub-layout
+  upNextInner: { flex: 1, justifyContent: 'space-between', marginTop: 14 },
+  upNextIconRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  upNextTitle: { fontSize: 14, fontWeight: '700', color: theme.colors.textPrimary, flexShrink: 1 },
+  upNextTime: { fontSize: 13, color: theme.colors.textSecondary, marginLeft: 12, fontWeight: '500' },
+  upNextAction: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  upNextActionText: { fontSize: 13, fontWeight: '700', color: theme.colors.info },
   
-  feeCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFF1F2', padding: 20, borderRadius: 20, marginBottom: 24, borderWidth: 1, borderColor: '#FFE4E6' },
-  feeLeft: { flexDirection: 'column' },
-  feeHeading: { fontSize: 12, fontWeight: '800', color: '#E11D48', letterSpacing: 1, marginBottom: 4 },
-  feeAmount: { fontSize: 28, fontWeight: '900', color: '#9F1239', marginBottom: 4 },
-  feeDate: { fontSize: 14, color: '#BE123C', fontWeight: '600' },
-  feePayBtn: { backgroundColor: '#FFFFFF', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, shadowColor: '#E11D48', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8 },
-  feePayBtnText: { color: '#E11D48', fontWeight: '800', fontSize: 15 },
+  // Fee Card Content
+  feeLeft: { flexDirection: 'column', justifyContent: 'center' },
+  feeHeading: { fontSize: 12, fontWeight: '800', color: theme.colors.error, letterSpacing: 1, marginBottom: 4 },
+  feeAmount: { fontSize: 28, fontWeight: '800', color: theme.colors.error, marginBottom: 2 },
+  feeDate: { fontSize: 13, fontWeight: '500', color: theme.colors.error, opacity: 0.8 },
+  feePayBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: theme.colors.error, paddingHorizontal: 20, height: 44, borderRadius: 12, justifyContent: 'center' },
+  feePayBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#64748B', letterSpacing: 1, marginBottom: 16, marginLeft: 4 },
-  quickAccessGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 28 },
-  qaTile: { width: '47%', backgroundColor: '#FFFFFF', padding: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 12, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 },
-  qaIconWrapper: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  qaLabel: { fontSize: 15, fontWeight: '700', color: '#1E293B', flex: 1 },
+  // Quick Access
+  qaRow: { flexDirection: 'row', gap: 14 },
+  qaTile: { width: QA_CARD_WIDTH, backgroundColor: theme.colors.surface, paddingHorizontal: 14, height: 76, borderRadius: 18, borderWidth: 1, borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center', gap: 12, ...theme.shadows.card },
+  qaIconWrapper: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  qaLabel: { fontSize: 15, fontWeight: '600', color: theme.colors.textPrimary, flexShrink: 1 },
   
-  activityContainer: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 20, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12 },
-  activityItem: { flexDirection: 'row', marginBottom: 16 },
-  activityTimeline: { alignItems: 'center', marginRight: 16, width: 12 },
-  activityDot: { width: 10, height: 10, borderRadius: 5, marginTop: 4, zIndex: 1 },
-  activityLine: { width: 2, flex: 1, backgroundColor: '#F1F5F9', marginTop: -4, marginBottom: -16 },
-  activityContent: { flex: 1, paddingBottom: 6 },
-  activityTitle: { fontSize: 15, fontWeight: '600', color: '#0F172A', marginBottom: 4 },
-  activityTime: { fontSize: 13, color: '#94A3B8', fontWeight: '500' },
+  // Recent Activity
+  activityContainer: { backgroundColor: theme.colors.surface, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: theme.colors.border, ...theme.shadows.card },
+  activityItem: { flexDirection: 'row', minHeight: 44 },
+  activityTimeline: { alignItems: 'center', marginRight: 14, width: 12 },
+  activityDot: { width: 6, height: 6, borderRadius: 3, marginTop: 6, zIndex: 1 },
+  activityLine: { width: 2, flex: 1, backgroundColor: theme.colors.borderLight, marginTop: -6, marginBottom: -14 },
+  activityContent: { flex: 1, paddingBottom: 14 },
+  activityTitle: { fontSize: 14, fontWeight: '600', color: theme.colors.textPrimary, marginBottom: 4 },
+  activityTime: { fontSize: 13, fontWeight: '500', color: theme.colors.textSecondary },
 });

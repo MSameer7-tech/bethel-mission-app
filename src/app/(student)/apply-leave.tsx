@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { useTheme } from '../../theme/ThemeContext';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { Calendar as CalendarIcon, Paperclip } from 'lucide-react-native';
 
 export default function ApplyLeaveScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [reason, setReason] = useState('');
   const [fromDate, setFromDate] = useState('2026-10-15');
   const [toDate, setToDate] = useState('2026-10-16');
@@ -12,13 +15,13 @@ export default function ApplyLeaveScreen() {
       <View style={styles.formCard}>
         <Text style={styles.label}>From Date</Text>
         <TouchableOpacity style={styles.inputContainer}>
-          <CalendarIcon color="#64748B" size={20} />
+          <CalendarIcon color={theme.colors.textSecondary} size={20} />
           <Text style={styles.inputText}>{fromDate}</Text>
         </TouchableOpacity>
 
         <Text style={styles.label}>To Date</Text>
         <TouchableOpacity style={styles.inputContainer}>
-          <CalendarIcon color="#64748B" size={20} />
+          <CalendarIcon color={theme.colors.textSecondary} size={20} />
           <Text style={styles.inputText}>{toDate}</Text>
         </TouchableOpacity>
 
@@ -37,7 +40,7 @@ export default function ApplyLeaveScreen() {
         </View>
 
         <TouchableOpacity style={styles.attachButton}>
-          <Paperclip color="#0284C7" size={20} />
+          <Paperclip color={theme.colors.primary} size={20} />
           <Text style={styles.attachText}>Attach Document (Medical Certificate etc.)</Text>
         </TouchableOpacity>
 
@@ -71,93 +74,93 @@ export default function ApplyLeaveScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
     padding: 16,
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     padding: 20,
-    borderRadius: 16,
+    borderRadius: theme.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     marginBottom: 24,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#334155',
+    color: theme.colors.textPrimary,
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.card,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 16,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
     gap: 12,
   },
   inputText: {
     fontSize: 16,
-    color: '#1E293B',
+    color: theme.colors.textPrimary,
   },
   textAreaContainer: {
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.card,
+    backgroundColor: theme.colors.background,
     marginBottom: 16,
   },
   textArea: {
     height: 120,
     padding: 16,
     fontSize: 16,
-    color: '#1E293B',
+    color: theme.colors.textPrimary,
   },
   attachButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#F0F9FF',
-    borderRadius: 12,
+    backgroundColor: theme.colors.infoBg,
+    borderRadius: theme.radius.card,
     marginBottom: 24,
     gap: 8,
   },
   attachText: {
-    color: '#0284C7',
+    color: theme.colors.primary,
     fontWeight: '500',
     fontSize: 14,
   },
   submitButton: {
-    backgroundColor: '#0B3B60',
+    backgroundColor: theme.colors.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: theme.radius.card,
     alignItems: 'center',
   },
   submitButtonText: {
-    color: '#FFFFFF',
+    color: theme.colors.surface,
     fontSize: 16,
     fontWeight: 'bold',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0F172A',
+    color: theme.colors.textPrimary,
     marginBottom: 16,
   },
   historyCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: theme.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     marginBottom: 12,
   },
   historyHeader: {
@@ -169,20 +172,20 @@ const styles = StyleSheet.create({
   historyDates: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1E293B',
+    color: theme.colors.textPrimary,
   },
   historyReason: {
     fontSize: 14,
-    color: '#64748B',
+    color: theme.colors.textSecondary,
   },
   statusBadgeApproved: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: theme.colors.successBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
   statusTextApproved: {
-    color: '#16A34A',
+    color: theme.colors.success,
     fontSize: 12,
     fontWeight: '600',
   },

@@ -1,6 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { FileText, Download, File, Image as ImageIcon, Video, ChevronRight, FileArchive } from 'lucide-react-native';
+import { useTheme } from '../../theme/ThemeContext';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { FileText, Download, File, Image as ImageIcon, Video, FileArchive } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TouchableBounce } from '../../components/TouchableBounce';
 
 const materials = [
   { id: '1', subject: 'Science', title: 'Chapter 4: Heat - Revision Notes', type: 'pdf', size: '2.4 MB', date: '12 Oct 2026' },
@@ -10,40 +13,44 @@ const materials = [
 ];
 
 export default function StudyMaterialScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  const insets = useSafeAreaInsets();
+
   const getIconForType = (type: string) => {
     switch (type) {
-      case 'pdf': return <FileText color="#E11D48" size={24} />;
-      case 'doc': return <File color="#2563EB" size={24} />;
-      case 'image': return <ImageIcon color="#059669" size={24} />;
-      case 'video': return <Video color="#7C3AED" size={24} />;
-      default: return <FileArchive color="#64748B" size={24} />;
+      case 'pdf': return <FileText color={theme.colors.error} size={24} />;
+      case 'doc': return <File color={theme.colors.info} size={24} />;
+      case 'image': return <ImageIcon color={theme.colors.success} size={24} />;
+      case 'video': return <Video color={theme.colors.academic} size={24} />;
+      default: return <FileArchive color={theme.colors.textSecondary} size={24} />;
     }
   };
 
   const getBackgroundColorForType = (type: string) => {
     switch (type) {
-      case 'pdf': return '#FFE4E6';
-      case 'doc': return '#DBEAFE';
-      case 'image': return '#D1FAE5';
-      case 'video': return '#EDE9FE';
-      default: return '#F1F5F9';
+      case 'pdf': return theme.colors.errorBg;
+      case 'doc': return theme.colors.infoBg;
+      case 'image': return theme.colors.successBg;
+      case 'video': return theme.colors.academicBg;
+      default: return theme.colors.borderLight;
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 24) }]}>
       <View style={styles.filterScroll}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {['All', 'Science', 'Mathematics', 'English', 'Social Science'].map((sub, index) => (
-            <TouchableOpacity key={sub} style={[styles.filterChip, index === 0 && styles.filterActive]}>
+            <TouchableBounce bounceScale={0.97} key={sub} style={[styles.filterChip, index === 0 && styles.filterActive]}>
               <Text style={[styles.filterText, index === 0 && styles.filterTextActive]}>{sub}</Text>
-            </TouchableOpacity>
+            </TouchableBounce>
           ))}
         </ScrollView>
       </View>
 
       {materials.map(mat => (
-        <TouchableOpacity key={mat.id} style={styles.materialCard} accessibilityRole="button" accessibilityLabel={`Download ${mat.title}`}>
+        <TouchableBounce bounceScale={0.98} key={mat.id} style={styles.materialCard}>
           <View style={[styles.iconContainer, { backgroundColor: getBackgroundColorForType(mat.type) }]}>
             {getIconForType(mat.type)}
           </View>
@@ -52,25 +59,25 @@ export default function StudyMaterialScreen() {
             <Text style={styles.materialTitle} numberOfLines={2}>{mat.title}</Text>
             <View style={styles.materialMeta}>
               <Text style={styles.metaText}>{mat.type.toUpperCase()}</Text>
-              <View style={styles.metaDot} />
+              <View style={[styles.metaDot, { backgroundColor: theme.colors.textMuted }]} />
               <Text style={styles.metaText}>{mat.size}</Text>
-              <View style={styles.metaDot} />
+              <View style={[styles.metaDot, { backgroundColor: theme.colors.textMuted }]} />
               <Text style={styles.metaText}>{mat.date}</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.downloadButton} accessibilityRole="button" accessibilityLabel="Download">
-            <Download color="#0B3B60" size={20} />
-          </TouchableOpacity>
-        </TouchableOpacity>
+          <TouchableBounce bounceScale={0.9} style={styles.downloadButton}>
+            <Download color={theme.colors.primary} size={20} />
+          </TouchableBounce>
+        </TouchableBounce>
       ))}
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
   },
   content: {
     padding: 16,
@@ -84,38 +91,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     marginRight: 8,
   },
   filterActive: {
-    backgroundColor: '#0B3B60',
-    borderColor: '#0B3B60',
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
   filterText: {
-    color: '#64748B',
+    color: theme.colors.textSecondary,
     fontWeight: '500',
     fontSize: 14,
   },
   filterTextActive: {
-    color: '#FFFFFF',
+    color: theme.colors.surface,
     fontWeight: '500',
   },
   materialCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     padding: 16,
-    borderRadius: 16,
+    borderRadius: theme.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     marginBottom: 12,
   },
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -127,13 +134,13 @@ const styles = StyleSheet.create({
   materialSubject: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#0284C7',
+    color: theme.colors.primary,
     marginBottom: 4,
   },
   materialTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#0F172A',
+    color: theme.colors.textPrimary,
     marginBottom: 8,
     lineHeight: 20,
   },
@@ -143,18 +150,17 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#64748B',
+    color: theme.colors.textSecondary,
   },
   metaDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#CBD5E1',
     marginHorizontal: 8,
   },
   downloadButton: {
     padding: 8,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
+    backgroundColor: theme.colors.infoBg,
+    borderRadius: 12,
   },
 });

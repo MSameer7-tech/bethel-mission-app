@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../theme/ThemeContext';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Library, BookOpen, Clock, Info, CheckCircle, Search } from 'lucide-react-native';
 
@@ -8,11 +9,13 @@ const issuedBooks = [
 ];
 
 export default function LibraryScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.headerCard}>
         <View style={styles.headerIcon}>
-          <Library color="#FFFFFF" size={32} />
+          <Library color={theme.colors.surface} size={32} />
         </View>
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerTitle}>School Library</Text>
@@ -21,18 +24,18 @@ export default function LibraryScreen() {
       </View>
 
       <TouchableOpacity style={styles.searchBar} accessibilityRole="search">
-        <Search color="#94A3B8" size={20} style={styles.searchIcon} />
+        <Search color={theme.colors.textMuted} size={20} style={styles.searchIcon} />
         <Text style={styles.searchText}>Search books by title or author...</Text>
       </TouchableOpacity>
 
       <View style={styles.infoGrid}>
         <View style={styles.infoCard}>
-          <Clock color="#0284C7" size={24} style={styles.infoIcon} />
+          <Clock color={theme.colors.primary} size={24} style={styles.infoIcon} />
           <Text style={styles.infoTitle}>Timings</Text>
           <Text style={styles.infoValue}>08:00 AM - 03:00 PM</Text>
         </View>
         <View style={styles.infoCard}>
-          <Info color="#0284C7" size={24} style={styles.infoIcon} />
+          <Info color={theme.colors.primary} size={24} style={styles.infoIcon} />
           <Text style={styles.infoTitle}>Max Books</Text>
           <Text style={styles.infoValue}>2 books per student</Text>
         </View>
@@ -43,7 +46,7 @@ export default function LibraryScreen() {
       {issuedBooks.map(book => (
         <View key={book.id} style={styles.bookCard}>
           <View style={styles.bookIconContainer}>
-            <BookOpen color="#64748B" size={24} />
+            <BookOpen color={theme.colors.textSecondary} size={24} />
           </View>
           <View style={styles.bookContent}>
             <Text style={styles.bookTitle} numberOfLines={1}>{book.title}</Text>
@@ -56,7 +59,7 @@ export default function LibraryScreen() {
               </View>
               <View>
                 <Text style={styles.dateLabel}>Due Date</Text>
-                <Text style={[styles.dateValue, book.status === 'Issued' && { color: '#E11D48' }]}>{book.dueOn}</Text>
+                <Text style={[styles.dateValue, book.status === 'Issued' && { color: theme.colors.error }]}>{book.dueOn}</Text>
               </View>
             </View>
           </View>
@@ -71,10 +74,10 @@ export default function LibraryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
   },
   content: {
     padding: 16,
@@ -83,9 +86,9 @@ const styles = StyleSheet.create({
   headerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0B3B60',
+    backgroundColor: theme.colors.primary,
     padding: 20,
-    borderRadius: 16,
+    borderRadius: theme.radius.card,
     marginBottom: 20,
   },
   headerIcon: {
@@ -103,29 +106,29 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: theme.colors.surface,
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: theme.colors.textMuted,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: theme.radius.card,
     marginBottom: 20,
   },
   searchIcon: {
     marginRight: 12,
   },
   searchText: {
-    color: '#94A3B8',
+    color: theme.colors.textMuted,
     fontSize: 16,
   },
   infoGrid: {
@@ -135,44 +138,44 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: theme.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
   },
   infoIcon: {
     marginBottom: 12,
   },
   infoTitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: theme.colors.textSecondary,
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#0F172A',
+    color: theme.colors.textPrimary,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0F172A',
+    color: theme.colors.textPrimary,
     marginBottom: 16,
   },
   bookCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     padding: 16,
-    borderRadius: 16,
+    borderRadius: theme.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     marginBottom: 16,
   },
   bookIconContainer: {
     width: 56,
     height: 72,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.colors.borderLight,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -184,12 +187,12 @@ const styles = StyleSheet.create({
   bookTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#0F172A',
+    color: theme.colors.textPrimary,
     marginBottom: 4,
   },
   bookAuthor: {
     fontSize: 13,
-    color: '#64748B',
+    color: theme.colors.textSecondary,
     marginBottom: 12,
   },
   bookDates: {
@@ -197,37 +200,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: theme.colors.borderLight,
   },
   dateLabel: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: theme.colors.textMuted,
     marginBottom: 2,
     textTransform: 'uppercase',
   },
   dateValue: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#334155',
+    color: theme.colors.textPrimary,
   },
   statusContainer: {
     marginLeft: 12,
   },
   statusBadge: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: theme.colors.warningBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   statusBadgeReturned: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: theme.colors.successBg,
   },
   statusText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#D97706',
+    color: theme.colors.warning,
   },
   statusTextReturned: {
-    color: '#16A34A',
+    color: theme.colors.success,
   },
 });

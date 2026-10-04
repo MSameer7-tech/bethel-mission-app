@@ -1,17 +1,27 @@
 import React from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { TouchableOpacity, Platform } from 'react-native';
+import { ArrowLeft } from 'lucide-react-native';
+import { useTheme } from '../../theme/ThemeContext';
 
 export default function StudentLayout() {
+  const { theme } = useTheme();
+  const router = useRouter();
+
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: '#0B3B60' },
-        headerTintColor: '#FFFFFF',
-        headerTitleStyle: { fontWeight: 'bold' as const },
-        animation: 'slide_from_right',
-        animationDuration: 250,
-        gestureEnabled: true,
-        gestureDirection: 'horizontal',
+        headerStyle: { backgroundColor: theme.colors.surface },
+        headerTintColor: theme.colors.textPrimary,
+        headerTitleStyle: { fontWeight: '700' as const, fontSize: 17 },
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+        animation: Platform.OS === 'ios' ? 'default' : 'fade_from_bottom',
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 16 }}>
+            <ArrowLeft color={theme.colors.textPrimary} size={24} />
+          </TouchableOpacity>
+        ),
       }}
     >
       <Stack.Screen name="attendance" options={{ title: 'Attendance' }} />

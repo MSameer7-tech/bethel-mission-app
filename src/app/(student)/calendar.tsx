@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTheme } from '../../theme/ThemeContext';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Calendar as CalendarIcon, Clock, MapPin } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const events = [
   { id: 1, date: '10 Oct 2026', title: 'Mathematics Unit Test', time: '10:00 AM - 11:30 AM', location: 'Classroom VII-C', type: 'Exam' },
@@ -9,8 +11,15 @@ const events = [
 ];
 
 export default function CalendarScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  const insets = useSafeAreaInsets();
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) }}
+    >
       {events.map(event => (
         <View key={event.id} style={styles.eventCard}>
           <View style={styles.dateCol}>
@@ -34,12 +43,12 @@ export default function CalendarScreen() {
             </View>
             
             <View style={styles.eventDetail}>
-              <Clock color="#64748B" size={14} />
+              <Clock color={theme.colors.textSecondary} size={14} />
               <Text style={styles.eventDetailText}>{event.time}</Text>
             </View>
             {event.location !== '-' && (
               <View style={styles.eventDetail}>
-                <MapPin color="#64748B" size={14} />
+                <MapPin color={theme.colors.textSecondary} size={14} />
                 <Text style={styles.eventDetailText}>{event.location}</Text>
               </View>
             )}
@@ -50,23 +59,23 @@ export default function CalendarScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
     padding: 16,
   },
   eventCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     marginBottom: 16,
     overflow: 'hidden',
   },
   dateCol: {
-    backgroundColor: '#0B3B60',
+    backgroundColor: theme.colors.primary,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -75,11 +84,11 @@ const styles = StyleSheet.create({
   dateDay: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: theme.colors.surface,
   },
   dateMonth: {
     fontSize: 14,
-    color: '#E2E8F0',
+    color: theme.colors.borderLight,
     textTransform: 'uppercase',
     fontWeight: '600',
   },
@@ -96,7 +105,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#0F172A',
+    color: theme.colors.textPrimary,
     flex: 1,
     marginRight: 8,
   },
@@ -105,13 +114,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
   },
-  typeExam: { backgroundColor: '#FEE2E2' },
-  typeHoliday: { backgroundColor: '#DCFCE7' },
-  typeEvent: { backgroundColor: '#FEF3C7' },
+  typeExam: { backgroundColor: theme.colors.errorBg },
+  typeHoliday: { backgroundColor: theme.colors.successBg },
+  typeEvent: { backgroundColor: theme.colors.warningBg },
   typeText: { fontSize: 11, fontWeight: 'bold' },
-  typeTextExam: { color: '#B91C1C' },
-  typeTextHoliday: { color: '#15803D' },
-  typeTextEvent: { color: '#B45309' },
+  typeTextExam: { color: theme.colors.error },
+  typeTextHoliday: { color: theme.colors.success },
+  typeTextEvent: { color: theme.colors.warning },
   eventDetail: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -120,6 +129,6 @@ const styles = StyleSheet.create({
   },
   eventDetailText: {
     fontSize: 13,
-    color: '#64748B',
+    color: theme.colors.textSecondary,
   },
 });

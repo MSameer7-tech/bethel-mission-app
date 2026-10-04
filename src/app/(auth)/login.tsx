@@ -1,20 +1,50 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, User, Lock } from 'lucide-react-native';
+import { useTheme } from '../../theme/ThemeContext';
+import { TouchableBounce } from '../../components/TouchableBounce';
+import { supabase } from '../../lib/supabase/client';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { role } = useLocalSearchParams();
-  const [userId, setUserId] = useState(role === 'student' ? 'BMS/2022/4102' : 'EMP-1042');
-  const [password, setPassword] = useState('password123');
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
 
-  const handleLogin = () => {
-    // Mock login logic
-    if (role === 'student') {
-      router.replace('/(tabs)');
-    } else {
-      router.replace('/(teacher-tabs)'); // Route to teacher tabs
+  // In a real app, student ID mapping to email would happen via Edge Function.
+  // For Phase 3, we use email directly in the Supabase Auth system.
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setErrorMsg('Please enter your email and password.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg('');
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password,
+      });
+
+      if (error) {
+        // Safe user-facing error message masking the real PostgREST/Supabase error
+        setErrorMsg('Invalid login credentials. Please try again.');
+        console.error('Auth error:', error.message);
+      }
+      // Success will automatically trigger the AuthContext listener and redirect via _layout.tsx
+    } catch (err) {
+      setErrorMsg('Unable to sign in right now. Please try again.');
+      console.error('Unexpected auth error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -27,7 +57,7 @@ export default function LoginScreen() {
         style={styles.backButton}
         onPress={() => router.back()}
       >
-        <ArrowLeft color="#1E293B" size={24} />
+        <ArrowLeft color={theme.colors.textPrimary} size={24} />
       </TouchableOpacity>
 
       <View style={styles.header}>
@@ -38,16 +68,24 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.form}>
+        {errorMsg ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errorMsg}</Text>
+          </View>
+        ) : null}
+
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Admission / Employee ID</Text>
+          <Text style={styles.label}>Email Address / Identifier</Text>
           <View style={styles.inputWrapper}>
-            <User color="#64748B" size={20} style={styles.inputIcon} />
+            <User color={theme.colors.textMuted} size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              value={userId}
-              onChangeText={setUserId}
-              placeholder="Enter your ID"
-              placeholderTextColor="#94A3B8"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Enter your email"
+              placeholderTextColor={theme.colors.textMuted}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
           </View>
         </View>
@@ -55,13 +93,13 @@ export default function LoginScreen() {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Password</Text>
           <View style={styles.inputWrapper}>
-            <Lock color="#64748B" size={20} style={styles.inputIcon} />
+            <Lock color={theme.colors.textMuted} size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               value={password}
               onChangeText={setPassword}
               placeholder="Enter password"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={theme.colors.textMuted}
               secureTextEntry
             />
           </View>
@@ -71,19 +109,28 @@ export default function LoginScreen() {
           <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Sign In</Text>
-        </TouchableOpacity>
+        <TouchableBounce 
+          bounceScale={0.97} 
+          style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} 
+          onPress={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.loginButtonText}>Sign In</Text>
+          )}
+        </TouchableBounce>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 24,
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.screenPadding,
   },
   backButton: {
     marginTop: 48,
@@ -93,39 +140,49 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.colors.surfaceSecondary,
   },
   header: {
     marginBottom: 40,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#0F172A',
+    ...theme.typography.styles.display,
+    color: theme.colors.textPrimary,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#64748B',
+    ...theme.typography.styles.body,
+    color: theme.colors.textSecondary,
   },
   form: {
     gap: 20,
+  },
+  errorContainer: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 14,
+    textAlign: 'center',
   },
   inputContainer: {
     gap: 8,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#334155',
+    ...theme.typography.styles.label,
+    color: theme.colors.textSecondary,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
+    borderColor: theme.colors.border,
+    borderRadius: 14,
+    backgroundColor: theme.colors.input,
     paddingHorizontal: 16,
   },
   inputIcon: {
@@ -135,27 +192,29 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     fontSize: 16,
-    color: '#1E293B',
+    color: theme.colors.textPrimary,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
   },
   forgotPasswordText: {
-    color: '#0284C7',
-    fontSize: 14,
-    fontWeight: '600',
+    ...theme.typography.styles.label,
+    color: theme.colors.info,
   },
   loginButton: {
-    backgroundColor: '#0B3B60',
+    backgroundColor: theme.colors.primary,
     height: 56,
-    borderRadius: 12,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 16,
   },
+  loginButtonDisabled: {
+    opacity: 0.7,
+  },
   loginButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
 });

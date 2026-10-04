@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { User, LogOut, Phone, Mail } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { teacherProfile } from '@/data/teachers';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function TeacherProfileScreen() {
   const router = useRouter();
+  const { signOut } = useAuth();
 
   return (
     <View style={styles.container}>
@@ -35,7 +37,9 @@ export default function TeacherProfileScreen() {
 
         <TouchableOpacity 
           style={styles.logoutButton}
-          onPress={() => router.replace('/')}
+          onPress={async () => {
+            await signOut();
+          }}
         >
           <LogOut color="#E11D48" size={20} />
           <Text style={styles.logoutText}>Sign Out</Text>

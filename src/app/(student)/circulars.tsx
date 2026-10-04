@@ -1,71 +1,74 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { FileText, Download, BellRing, Calendar } from 'lucide-react-native';
-
-const circulars = [
-  { id: 1, title: 'Schedule for Half Yearly Examinations 2026', date: '05 Oct 2026', ref: 'BMS/2026/Cir-42', isNew: true },
-  { id: 2, title: 'Revised Timings for Winter Session', date: '01 Oct 2026', ref: 'BMS/2026/Cir-41', isNew: false },
-  { id: 3, title: 'Parent Teacher Meeting Guidelines', date: '28 Sep 2026', ref: 'BMS/2026/Cir-40', isNew: false },
-  { id: 4, title: 'Diwali Vacation Announcement', date: '20 Sep 2026', ref: 'BMS/2026/Cir-39', isNew: false },
-];
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TouchableBounce } from '../../components/TouchableBounce';
 
 export default function CircularsScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  const insets = useSafeAreaInsets();
+
+  const circulars = [
+    { id: 1, title: 'Schedule for Half Yearly Examinations 2026', date: '05 Oct 2026', ref: 'BMS/2026/Cir-42', isNew: true },
+    { id: 2, title: 'Revised Timings for Winter Session', date: '01 Oct 2026', ref: 'BMS/2026/Cir-41', isNew: false },
+    { id: 3, title: 'Parent Teacher Meeting Guidelines', date: '28 Sep 2026', ref: 'BMS/2026/Cir-40', isNew: false },
+    { id: 4, title: 'Diwali Vacation Announcement', date: '20 Sep 2026', ref: 'BMS/2026/Cir-39', isNew: false },
+  ];
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 24) }]}>
       {circulars.map(circular => (
-        <TouchableOpacity key={circular.id} style={styles.card} accessibilityRole="button">
+        <TouchableBounce key={circular.id} style={styles.card}>
           <View style={styles.cardHeader}>
-            <View style={styles.iconContainer}>
-              <BellRing color={circular.isNew ? "#E11D48" : "#0284C7"} size={24} />
+            <View style={[styles.iconContainer, circular.isNew && { backgroundColor: theme.colors.errorBg }]}>
+              <BellRing color={circular.isNew ? theme.colors.error : theme.colors.primary} size={24} />
             </View>
-            <View style={styles.headerRight}>
+            <View style={styles.headerText}>
+              <Text style={styles.refText}>Ref: {circular.ref}</Text>
               {circular.isNew && (
                 <View style={styles.newBadge}>
-                  <Text style={styles.newBadgeText}>NEW</Text>
+                  <Text style={styles.newText}>NEW</Text>
                 </View>
               )}
-              <Text style={styles.refText}>{circular.ref}</Text>
             </View>
           </View>
           
-          <Text style={styles.title} numberOfLines={2}>{circular.title}</Text>
+          <Text style={styles.title}>{circular.title}</Text>
           
-          <View style={styles.footer}>
+          <View style={styles.cardFooter}>
             <View style={styles.dateContainer}>
-              <Calendar color="#64748B" size={14} />
+              <Calendar color={theme.colors.textSecondary} size={14} />
               <Text style={styles.dateText}>{circular.date}</Text>
             </View>
-            <TouchableOpacity style={styles.downloadBtn} accessibilityRole="button" accessibilityLabel="Download Circular">
-              <Download color="#0B3B60" size={16} />
+            <View style={styles.downloadBtn}>
+              <Download color={theme.colors.primary} size={16} />
               <Text style={styles.downloadText}>Download</Text>
-            </TouchableOpacity>
+            </View>
           </View>
-        </TouchableOpacity>
+        </TouchableBounce>
       ))}
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
   },
   content: {
     padding: 16,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 16,
+    backgroundColor: theme.colors.surface,
+    padding: 20,
+    borderRadius: theme.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    ...theme.shadows.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -77,43 +80,44 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.colors.infoBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerRight: {
+  headerText: {
     alignItems: 'flex-end',
-    gap: 4,
+    gap: 6,
+  },
+  refText: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    fontWeight: '600',
   },
   newBadge: {
-    backgroundColor: '#E11D48',
+    backgroundColor: theme.colors.error,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 12,
+    borderRadius: 4,
   },
-  newBadgeText: {
+  newText: {
     color: '#FFFFFF',
     fontSize: 10,
     fontWeight: 'bold',
   },
-  refText: {
-    fontSize: 12,
-    color: '#94A3B8',
-  },
   title: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#0F172A',
-    marginBottom: 16,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    marginBottom: 20,
     lineHeight: 22,
   },
-  footer: {
+  cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 12,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: theme.colors.borderLight,
   },
   dateContainer: {
     flexDirection: 'row',
@@ -122,20 +126,21 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 13,
-    color: '#64748B',
+    color: theme.colors.textSecondary,
+    fontWeight: '500',
   },
   downloadBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F0F9FF',
+    backgroundColor: theme.colors.infoBg,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderRadius: 8,
   },
   downloadText: {
+    color: theme.colors.primary,
     fontSize: 13,
     fontWeight: '600',
-    color: '#0B3B60',
   },
 });
