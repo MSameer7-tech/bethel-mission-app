@@ -1,56 +1,107 @@
-# Welcome to your Expo app 👋
+# Bethel Mission School App 🎓
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern mobile application for **Bethel Mission School, Anuppur**, designed to bring students, teachers, and school administration together in one simple and convenient platform.
 
-## Get started
+The application provides separate dashboards and workflows based on the user's role while keeping the overall experience clean, minimal, and easy to use.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## ✨ Features
 
-2. Start the app
+### 👨‍🎓 Student Dashboard
 
-   ```bash
-   npx expo start
-   ```
+Students can access:
 
-In the output, you'll find options to open the app in a
+- 👤 My Profile
+- 📅 Daily Attendance
+- 📝 Homework
+- 📢 Circulars & Notices
+- 🗓️ Academic Calendar
+- 💳 Fee Details
+- 💰 Online Fee Payment
+- 📚 Library
+- 📊 Results & Marks
+- 🏖️ Apply for Leave
+- 📖 Study Materials & PDFs
+- 🚌 Bus & Transport Information
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Parents can log in using the student's account to access the same student information and monitor academic activities.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+### 👨‍🏫 Teacher Dashboard
 
-When you're ready, run:
+Teachers can:
 
-```bash
-npm run reset-project
-```
+- ✅ Mark daily attendance
+- ✏️ Edit attendance records
+- 📝 Upload homework
+- 📚 Upload study materials
+- 📊 Enter examination marks
+- 💬 Add student remarks
+- 📩 Send messages to parents
+- 📢 Create announcements
+- 🏖️ Approve or reject leave applications
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-### Other setup steps
+### 👨‍💼 Administration
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+The school administration can manage important school operations including:
 
-## Learn more
+- Student management
+- Teacher management
+- Classes and sections
+- Attendance
+- Homework
+- Study materials
+- Examination results
+- Fees
+- Announcements
+- Leave applications
+- Transport information
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 🎯 Project Goals
 
+The application aims to:
 
+- Simplify communication between school, teachers, students, and parents
+- Reduce dependence on paper-based processes
+- Provide students with easy access to academic information
+- Make attendance and homework management easier for teachers
+- Centralize important school information
+- Provide a clean and modern mobile experience
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 🛠️ Tech Stack
+
+- **React Native**
+- **Expo**
+- **TypeScript**
+- **Expo Router**
+- **Supabase**
+- **JavaScript / TypeScript**
+
+---
+
+## 📱 Application Structure
+
+The application uses role-based dashboards so that users only see the features relevant to them.
+
+```text
+                    Bethel Mission School App
+                              │
+                ┌─────────────┴─────────────┐
+                │                           │
+           Student / Parent             Teacher
+                │                           │
+        ┌───────┼────────┐          ┌───────┼────────┐
+        │       │        │          │       │        │
+    Profile  Academic   Fees     Attendance Homework Results
+                │                           │
+        ┌───────┼────────┐          ┌───────┼────────┐
+        │       │        │          │       │        │
+    Homework Results  Materials   Remarks Messages Notices
